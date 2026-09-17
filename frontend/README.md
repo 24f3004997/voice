@@ -21,5 +21,5 @@ backend first.
 - validates supported file extensions and the 25 MB limit before upload;
 - shows loading and server-error states;
 - displays a probability and risk only when the backend returns actual values;
-- marks the current development detector as **No model output**, rather than
-  inventing a genuine/synthetic result.
+- marks a successful response as **Model output**, and keeps error/fallback
+  responses visibly separate from genuine model inference.
