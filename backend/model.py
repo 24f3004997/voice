@@ -1,194 +1,585 @@
-# import time
+# import os
+# import tempfile
+
 # import librosa
 # import numpy as np
+# import torch
+# import torch.nn as nn
 
-# def extract_real_dsp_features(audio_path: str):
-#     """Calculates real acoustic & spectral properties from the uploaded audio file."""
+
+# # --------------------------------------------------
+# # PATHS
+# # --------------------------------------------------
+
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# MODEL_PATH = os.path.join(
+#     BASE_DIR,
+#     "training",
+#     "outputs",
+#     "voxshield_cnn_best.pt"
+# )
+
+# SAMPLE_RATE = 16000
+# AUDIO_SECONDS = 3
+# NUM_SAMPLES = SAMPLE_RATE * AUDIO_SECONDS
+
+# N_MELS = 64
+# N_FFT = 512
+# HOP_LENGTH = 160
+
+# THRESHOLD = 0.50
+
+
+# # --------------------------------------------------
+# # MODEL
+# # --------------------------------------------------
+
+# class VoxShieldCNN(nn.Module):
+
+#     def __init__(self):
+#         super().__init__()
+
+#         self.features = nn.Sequential(
+#             nn.Conv2d(1, 4, 3, padding=1),
+#             nn.ReLU(),
+#             nn.MaxPool2d(2),
+
+#             nn.Conv2d(4, 8, 3, padding=1),
+#             nn.ReLU(),
+#             nn.MaxPool2d(2),
+
+#             nn.Conv2d(8, 16, 3, padding=1),
+#             nn.ReLU(),
+
+#             nn.AdaptiveAvgPool2d((1, 1))
+#         )
+
+#         self.classifier = nn.Sequential(
+#             nn.Flatten(),
+#             nn.Dropout(0.2),
+#             nn.Linear(16, 2)
+#         )
+
+#     def forward(self, x):
+#         x = self.features(x)
+#         return self.classifier(x)
+
+
+# # --------------------------------------------------
+# # LOAD MODEL ONCE
+# # --------------------------------------------------
+
+# device = torch.device("cpu")
+
+# model = VoxShieldCNN()
+
+# checkpoint = torch.load(
+#     MODEL_PATH,
+#     map_location=device,
+#     weights_only=False
+# )
+
+# state_dict = checkpoint.get("model_state_dict", checkpoint)
+
+# model.load_state_dict(state_dict)
+# model.to(device)
+# model.eval()
+
+
+# # --------------------------------------------------
+# # AUDIO FEATURE EXTRACTION
+# # --------------------------------------------------
+
+# def extract_features(audio_path):
+
+#     y, sr = librosa.load(
+#         audio_path,
+#         sr=SAMPLE_RATE,
+#         mono=True
+#     )
+
+#     # 3 sec fixed length
+#     if len(y) < NUM_SAMPLES:
+#         y = np.pad(
+#             y,
+#             (0, NUM_SAMPLES - len(y))
+#         )
+#     else:
+#         y = y[:NUM_SAMPLES]
+
+#     mel = librosa.feature.melspectrogram(
+#         y=y,
+#         sr=SAMPLE_RATE,
+#         n_fft=N_FFT,
+#         hop_length=HOP_LENGTH,
+#         n_mels=N_MELS,
+#         power=2.0
+#     )
+
+#     logmel = librosa.power_to_db(
+#         mel,
+#         ref=np.max
+#     )
+
+#     # Same normalization as training
+#     logmel = (
+#         logmel - logmel.mean()
+#     ) / (
+#         logmel.std() + 1e-6
+#     )
+
+#     tensor = torch.tensor(
+#         logmel,
+#         dtype=torch.float32
+#     ).unsqueeze(0).unsqueeze(0)
+
+#     return tensor
+
+
+# # --------------------------------------------------
+# # MAIN ANALYSIS
+# # --------------------------------------------------
+
+# def analyze_audio_file(file_bytes: bytes, filename: str):
+
+#     if not file_bytes:
+#         raise ValueError("Uploaded audio is empty.")
+
+#     suffix = os.path.splitext(filename)[1] or ".wav"
+
+#     temp_path = None
+
 #     try:
-#         y, sr = librosa.load(audio_path, sr=16000, duration=30)
-        
-#         # Calculate Spectral Features
-#         centroid = float(np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)))
-#         flatness = float(np.mean(librosa.feature.spectral_flatness(y=y)))
-        
-#         # Calculate Pitch / F0 variation
-#         pitches, _ = librosa.piptrack(y=y, sr=sr)
-#         pitch_vals = pitches[pitches > 0]
-#         pitch_std = float(np.std(pitch_vals)) if len(pitch_vals) > 0 else 0.0
-        
-#         # Dynamic Heuristic Model Scoring based on Audio Features
-#         # High spectral flatness (>0.015) or low pitch variance (<25) indicates AI synthesis
-#         spoof_score = 0.20
-#         explanations = []
-        
-#         if flatness > 0.012:
-#             spoof_score += 0.45
-#             explanations.append(f"High spectral flatness ({flatness:.4f}) indicates synthetic noise artifacts.")
+
+#         with tempfile.NamedTemporaryFile(
+#             suffix=suffix,
+#             delete=False
+#         ) as temp_file:
+
+#             temp_file.write(file_bytes)
+#             temp_path = temp_file.name
+
+#         features = extract_features(temp_path)
+
+#         with torch.no_grad():
+
+#             logits = model(
+#                 features.to(device)
+#             )
+
+#             probabilities = torch.softmax(
+#                 logits,
+#                 dim=1
+#             )[0]
+
+#         # label 0 = bonafide
+#         # label 1 = spoof
+
+#         bonafide_probability = float(
+#             probabilities[0].item()
+#         )
+
+#         spoof_probability = float(
+#             probabilities[1].item()
+#         )
+
+#         label = (
+#             "SPOOF"
+#             if spoof_probability >= THRESHOLD
+#             else "BONAFIDE"
+#         )
+
+#         if label == "SPOOF":
+#             overall_risk = round(
+#                 spoof_probability * 100
+#             )
+
+#             voice_risk = (
+#                 "high"
+#                 if spoof_probability >= 0.70
+#                 else "medium"
+#             )
+
+#             verdict = "HIGH RISK" if spoof_probability >= 0.70 else "MEDIUM RISK"
+
+#             status_label = "Potential Synthetic Voice Detected"
+
+#             action = "ADDITIONAL VERIFICATION REQUIRED"
+
 #         else:
-#             explanations.append("Natural spectral energy distribution observed across frequency bands.")
-            
-#         if pitch_std < 25.0:
-#             spoof_score += 0.30
-#             explanations.append(f"Monotone pitch variance ({pitch_std:.1f}) detected — typical of neural speech synthesis.")
-#         else:
-#             explanations.append("Human-like micro-pitch variations and natural prosody confirmed.")
+#             overall_risk = round(
+#                 spoof_probability * 100
+#             )
 
-#         spoof_prob = min(max(spoof_score, 0.05), 0.95)
-        
+#             voice_risk = "low"
+
+#             verdict = "LOW RISK"
+
+#             status_label = "No Strong Synthetic Voice Signal"
+
+#             action = "CONTINUE WITH STANDARD VERIFICATION"
+
 #         return {
-#             "spectral_centroid": round(centroid, 2),
-#             "spectral_flatness": round(flatness, 4),
-#             "pitch_std": round(pitch_std, 2),
-#             "spoof_prob": spoof_prob,
-#             "explanations": explanations
+#             "status": "complete",
+
+#             "verdict": verdict,
+
+#             "label": label,
+
+#             "status_label": status_label,
+
+#             "overall_risk": overall_risk,
+
+#             "spoof_probability": round(
+#                 spoof_probability,
+#                 4
+#             ),
+
+#             "bonafide_probability": round(
+#                 bonafide_probability,
+#                 4
+#             ),
+
+#             "voice_risk": voice_risk,
+
+#             "action": action,
+
+#             "recommendation": (
+#                 "Model flagged synthetic voice characteristics. "
+#                 "Perform independent verification."
+#                 if label == "SPOOF"
+#                 else
+#                 "No strong synthetic signal detected. "
+#                 "This does not prove the voice is genuine."
+#             ),
+
+#             "model_name": "VoxShield CNN",
+
 #         }
-#     except Exception as e:
-#         return {
-#             "spectral_centroid": 1850.0,
-#             "spectral_flatness": 0.02,
-#             "pitch_std": 14.2,
-#             "spoof_prob": 0.88,
-#             "explanations": ["High spectral flatness (0.0208) indicates synthetic noise artifacts.", "Synthetic audio patterns flagged."]
-#         }
 
-# def analyze_audio_file(file_bytes: bytes, filename: str) -> dict:
-#     start_time = time.time()
-    
-#     # Process actual file features
-#     dsp_results = extract_real_dsp_features(filename)
-#     spoof_prob = dsp_results["spoof_prob"]
-    
-#     # Classification Label mapping
-#     if spoof_prob > 0.60:
-#         label = "Spoof"
-#         voice_risk = "high"
-#         recommendation = "Do not authorise sensitive actions over this call. Mandate out-of-band secondary verification via registered device."
-#     elif spoof_prob > 0.35:
-#         label = "Suspicious"
-#         voice_risk = "medium"
-#         recommendation = "Proceed with caution. Request caller to answer dynamic security questions."
-#     else:
-#         label = "Bonafide"
-#         voice_risk = "low"
-#         recommendation = "Voice characteristics align with expected human norms. Standard verification protocols apply."
+#     finally:
 
-#     processing_time = int((time.time() - start_time) * 1000)
+#         if temp_path and os.path.exists(temp_path):
+#             os.remove(temp_path)
 
-#     # Prepend primary detection finding
-#     final_explanations = dsp_results["explanations"]
-#     if label == "Spoof":
-#         final_explanations.insert(0, f"Acoustic pipeline detected synthetic speech indicators with {(spoof_prob * 100):.1f}% spoof probability.")
-#     else:
-#         final_explanations.insert(0, f"Acoustic pipeline verified natural human voice attributes with {((1 - spoof_prob) * 100):.1f}% confidence.")
+import os
+import tempfile
 
-#     return {
-#         "status": "complete",
-#         "label": label,
-#         "spoof_probability": round(spoof_prob, 4),
-#         "voice_risk": voice_risk,
-#         "explanation": final_explanations,
-#         "model_name": "VoxShield-Wav2Vec2-DSP-v1",
-#         "processing_time_ms": processing_time
-#     }
-
-
-
-
-
-
-
-
-import time
 import librosa
 import numpy as np
+import torch
+import torch.nn as nn
 
-def extract_real_dsp_features(audio_path: str):
-    """Calibrated DSP acoustic extractor for accurate human vs synthetic voice detection."""
-    try:
-        y, sr = librosa.load(audio_path, sr=16000, duration=30)
-        
-        # 1. Pitch / F0 variation (Human speech has expressive variation; AI is usually flat/monotone)
-        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-        pitch_vals = pitches[pitches > 0]
-        pitch_std = float(np.std(pitch_vals)) if len(pitch_vals) > 0 else 0.0
-        
-        # 2. Zero Crossing Rate (ZCR) & Energy (Human voice has natural pauses & dynamic variations)
-        zcr_mean = float(np.mean(librosa.feature.zero_crossing_rate(y=y)))
-        rms_std = float(np.std(librosa.feature.rms(y=y)))
-        flatness = float(np.mean(librosa.feature.spectral_flatness(y=y)))
-        
-        # Calibrated Heuristic Logic
-        # Human natural speech: pitch_std > 30, rms_std > 0.01 (Dynamic range)
-        spoof_score = 0.12  # Base genuine human probability benchmark
-        explanations = []
 
-        if pitch_std > 30.0 and rms_std > 0.008:
-            # Clear signs of human voice cadence and expression
-            spoof_score = 0.08 + min(flatness * 2.0, 0.15)
-            explanations.append("Natural pitch variations and rich prosodic dynamics detected.")
-            explanations.append("Human vocal tract acoustic energy and natural speech pauses confirmed.")
-        elif pitch_std < 20.0:
-            # Synthetic monotone speech signature
-            spoof_score = 0.75
-            explanations.append(f"Monotone pitch variation ({pitch_std:.1f}) detected — consistent with neural TTS models.")
-            explanations.append("Lacks natural human intonation micro-variations.")
-        else:
-            # Slight noise / neutral speech pattern
-            spoof_score = 0.28
-            explanations.append("Standard acoustic energy distribution across vocal frequencies.")
-            explanations.append("Micro-pitch variations fall within expected speech boundaries.")
+# ---------------------------------------------------------
+# Paths / constants
+# ---------------------------------------------------------
 
-        spoof_prob = min(max(spoof_score, 0.04), 0.96)
-        
-        return {
-            "pitch_std": round(pitch_std, 2),
-            "flatness": round(flatness, 4),
-            "spoof_prob": round(spoof_prob, 4),
-            "explanations": explanations
-        }
-    except Exception as e:
-        return {
-            "spoof_prob": 0.12,
-            "explanations": [
-                "Natural acoustic energy distribution observed across frequency bands.",
-                "Human micro-pitch variations and natural prosody confirmed."
-            ]
-        }
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def analyze_audio_file(file_bytes: bytes, filename: str) -> dict:
-    start_time = time.time()
-    
-    dsp = extract_real_dsp_features(filename)
-    spoof_prob = dsp["spoof_prob"]
-    
-    # Precise Threshold Mapping
-    if spoof_prob >= 0.65:
-        label = "Spoof"
+MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "training",
+    "outputs",
+    "voxshield_cnn_best.pt",
+)
+
+TARGET_SR = 16000
+AUDIO_DURATION = 3
+TARGET_SAMPLES = TARGET_SR * AUDIO_DURATION
+
+N_MELS = 64
+N_FFT = 512
+HOP_LENGTH = 160
+
+
+# ---------------------------------------------------------
+# Model
+# ---------------------------------------------------------
+
+class VoxShieldCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 4, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(4, 8, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(8, 16, 3, padding=1),
+            nn.ReLU(),
+
+            nn.AdaptiveAvgPool2d((1, 1)),
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.2),
+            nn.Linear(16, 2),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        return self.classifier(x)
+
+
+# ---------------------------------------------------------
+# Load model ONCE
+# ---------------------------------------------------------
+
+device = torch.device("cpu")
+
+model = VoxShieldCNN().to(device)
+
+checkpoint = torch.load(
+    MODEL_PATH,
+    map_location=device,
+    weights_only=False,
+)
+
+if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+    model.load_state_dict(checkpoint["model_state_dict"])
+else:
+    model.load_state_dict(checkpoint)
+
+model.eval()
+
+
+# ---------------------------------------------------------
+# Feature extraction
+# ---------------------------------------------------------
+
+def waveform_to_tensor(y: np.ndarray, sample_rate: int):
+    """
+    Convert raw waveform into the same Mel-spectrogram
+    representation used during CNN training.
+    """
+
+    y = np.asarray(y, dtype=np.float32)
+
+    # Mono
+    if y.ndim > 1:
+        y = np.mean(y, axis=1)
+
+    # Resample to 16 kHz
+    if sample_rate != TARGET_SR:
+        y = librosa.resample(
+            y,
+            orig_sr=sample_rate,
+            target_sr=TARGET_SR,
+        )
+
+    # Exactly 3 seconds
+    if len(y) < TARGET_SAMPLES:
+        y = np.pad(
+            y,
+            (0, TARGET_SAMPLES - len(y)),
+            mode="constant",
+        )
+    else:
+        y = y[-TARGET_SAMPLES:]
+
+    # Mel spectrogram
+    mel = librosa.feature.melspectrogram(
+        y=y,
+        sr=TARGET_SR,
+        n_fft=N_FFT,
+        hop_length=HOP_LENGTH,
+        n_mels=N_MELS,
+        power=2.0,
+    )
+
+    mel_db = librosa.power_to_db(
+        mel,
+        ref=np.max,
+    )
+
+    # Standardization
+    mel_db = (
+        mel_db - mel_db.mean()
+    ) / (mel_db.std() + 1e-6)
+
+    tensor = torch.from_numpy(
+        mel_db.astype(np.float32)
+    )
+
+    tensor = tensor.unsqueeze(0).unsqueeze(0)
+
+    return tensor.to(device)
+
+
+# ---------------------------------------------------------
+# CNN prediction
+# ---------------------------------------------------------
+
+def _predict_waveform(
+    y: np.ndarray,
+    sample_rate: int,
+):
+    x = waveform_to_tensor(
+        y,
+        sample_rate,
+    )
+
+    with torch.no_grad():
+        logits = model(x)
+
+        probabilities = torch.softmax(
+            logits,
+            dim=1,
+        )[0]
+
+    bonafide_probability = float(
+        probabilities[0].item()
+    )
+
+    spoof_probability = float(
+        probabilities[1].item()
+    )
+
+    # 0 = bonafide
+    # 1 = spoof
+
+    if spoof_probability >= 0.70:
+        verdict = "HIGH RISK"
         voice_risk = "high"
-        recommendation = "High risk of AI voice cloning. Mandate secondary out-of-band verification."
-    elif spoof_prob >= 0.35:
-        label = "Suspicious"
+        action = "PAUSE AND VERIFY"
+        recommendation = (
+            "Potential synthetic voice signal detected. "
+            "Verify caller identity before continuing."
+        )
+
+    elif spoof_probability >= 0.50:
+        verdict = "MEDIUM RISK"
         voice_risk = "medium"
-        recommendation = "Proceed with caution. Perform dynamic caller verification."
+        action = "MONITOR"
+        recommendation = (
+            "Potential synthetic voice indicators detected. "
+            "Continue monitoring and verify if needed."
+        )
+
     else:
-        label = "Bonafide"
+        verdict = "LOW RISK"
         voice_risk = "low"
-        recommendation = "Voice characteristics align with natural human speech patterns. No spoofing indicators detected."
+        action = "CONTINUE"
+        recommendation = (
+            "No strong synthetic voice signal detected "
+            "in the current audio window."
+        )
 
-    processing_time = int((time.time() - start_time) * 1000)
-
-    final_explanations = dsp["explanations"]
-    if label == "Bonafide":
-        final_explanations.insert(0, f"Acoustic pipeline verified authentic human voice attributes with {((1 - spoof_prob) * 100):.1f}% confidence.")
-    else:
-        final_explanations.insert(0, f"Acoustic pipeline detected synthetic speech indicators with {(spoof_prob * 100):.1f}% spoof probability.")
+    label = (
+        "SPOOF"
+        if spoof_probability >= 0.50
+        else "BONAFIDE"
+    )
 
     return {
         "status": "complete",
         "label": label,
-        "spoof_probability": spoof_prob,
+        "status_label": label,
+
+        "verdict": verdict,
+
+        "overall_risk": round(
+            spoof_probability * 100
+        ),
+
+        "spoof_probability": round(
+            spoof_probability,
+            4,
+        ),
+
+        "bonafide_probability": round(
+            bonafide_probability,
+            4,
+        ),
+
         "voice_risk": voice_risk,
-        "explanation": final_explanations,
-        "model_name": "VoxShield-Acoustic-DSP-v1",
-        "processing_time_ms": processing_time
+
+        "action": action,
+
+        "recommendation": recommendation,
+
+        "model_name": "VoxShield CNN",
     }
+
+
+# ---------------------------------------------------------
+# Existing uploaded-file inference
+# ---------------------------------------------------------
+
+def analyze_audio_file(
+    file_bytes: bytes,
+    filename: str,
+):
+    suffix = os.path.splitext(filename)[1]
+
+    with tempfile.NamedTemporaryFile(
+        suffix=suffix,
+        delete=False,
+    ) as temp:
+
+        temp.write(file_bytes)
+        temp_path = temp.name
+
+    try:
+        y, sr = librosa.load(
+            temp_path,
+            sr=None,
+            mono=True,
+        )
+
+        return _predict_waveform(
+            y,
+            sr,
+        )
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+# ---------------------------------------------------------
+# NEW: Real-time PCM inference
+# ---------------------------------------------------------
+
+def analyze_pcm_audio(
+    audio: np.ndarray,
+    sample_rate: int,
+):
+    """
+    Analyze raw PCM microphone audio.
+
+    Frontend sends:
+        Int16 PCM
+        mono
+        browser's native sample rate
+
+    Backend converts it into the same
+    16 kHz / 3 second representation
+    used by the trained CNN.
+    """
+
+    audio = np.asarray(
+        audio,
+        dtype=np.float32,
+    )
+
+    if audio.size == 0:
+        raise ValueError(
+            "Empty audio window."
+        )
+
+    # Int16 -> float32
+    if np.max(np.abs(audio)) > 1.5:
+        audio = audio / 32768.0
+
+    return _predict_waveform(
+        audio,
+        sample_rate,
+    )
