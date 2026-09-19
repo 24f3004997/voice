@@ -1,0 +1,2 @@
+import React from "react";
+export default function RiskBar({name,value,color=""}){return <div className="riskbar panel"><span>{name}</span><b className={color}>{value}</b><div><i style={{width:value}} className={color}/></div></div>}

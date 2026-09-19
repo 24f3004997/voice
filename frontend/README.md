@@ -1,25 +1,28 @@
-# VoxShield frontend
+# VoxTrace UI — Refactored
 
-This is the React dashboard for uploading one audio file and displaying exactly
-what the FastAPI backend returns.
+Pages and reusable components are separated.
 
-## Run it
+## Pages
+- `src/pages/Overview.jsx`
+- `src/pages/LiveCalls.jsx`
+- `src/pages/Investigations.jsx`
+- `src/pages/VoiceProfiles.jsx`
+- `src/pages/AnalyzeAudio.jsx`
 
-From this `frontend` folder:
+## Components
+- `src/components/Layout.jsx`
+- `src/components/StatCard.jsx`
+- `src/components/RiskChart.jsx`
+- `src/components/StatusList.jsx`
+- `src/components/IncidentTable.jsx`
+- `src/components/RiskBar.jsx`
+- `src/components/LiveParts.jsx`
 
-```powershell
+## Data
+- `src/data.js`
+
+Run:
+```bash
 npm install
 npm run dev
 ```
-
-Open the address Vite prints (normally `http://localhost:5173`). The included
-Vite proxy sends `/api/*` requests to `http://127.0.0.1:8000`, so start the
-backend first.
-
-## What the UI deliberately does
-
-- validates supported file extensions and the 25 MB limit before upload;
-- shows loading and server-error states;
-- displays a probability and risk only when the backend returns actual values;
-- marks a successful response as **Model output**, and keeps error/fallback
-  responses visibly separate from genuine model inference.
