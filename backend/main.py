@@ -3,6 +3,8 @@
 # import json
 # import time
 # import wave
+# import os
+# import soundfile as sf
 # from datetime import datetime
 
 # import numpy as np
@@ -29,6 +31,112 @@
 # )
 
 # ALLOWED_EXTENSIONS = {"wav", "mp3", "m4a", "flac", "ogg", "webm"}
+
+# # ============================================================
+# # REAL-TIME OVERVIEW STATE
+# # ============================================================
+
+# overview_state = {
+#     "active_calls": 0,
+#     "active_calls_delta": "Live",
+#     "high_risk_calls": 0,
+#     "calls_analyzed_today": 0,
+#     "calls_analyzed_delta": "Live",
+#     "risk_activity": [],
+#     "system_status": {
+#         "detection": True,
+#         "speaker_verification": True,
+#         "behavior_analysis": True,
+#         "transaction_risk": True,
+#     },
+#     "system_status_label": "Live configuration",
+#     "recent_incidents": [],
+#     "verification_pending": 0,
+#     "actions_paused": 0,
+#     "analysis_sources": {
+#         "live_calls": 0,
+#         "uploaded_audio": 0,
+#     },
+# }
+# voice_profiles = [
+#     {
+#         "id": "VP-001",
+#         "name": "Aarav Mehta",
+#         "role": "Executive",
+#         "status": "ACTIVE",
+#         "samples": 18,
+#         "verified": "Today",
+#         "drift": "LOW",
+#     },
+#     {
+#         "id": "VP-002",
+#         "name": "Riya Sharma",
+#         "role": "Finance",
+#         "status": "ACTIVE",
+#         "samples": 14,
+#         "verified": "Today",
+#         "drift": "LOW",
+#     },
+#     {
+#         "id": "VP-003",
+#         "name": "Kabir Singh",
+#         "role": "Operations",
+#         "status": "REVIEW",
+#         "samples": 11,
+#         "verified": "2 days ago",
+#         "drift": "HIGH",
+#     },
+# ]
+# _live_sessions = {}
+
+
+# def _risk_level(risk: int) -> str:
+#     if risk >= 70:
+#         return "HIGH"
+#     if risk >= 50:
+#         return "MEDIUM"
+#     return "LOW"
+
+
+# def _record_risk_activity(risk: int):
+#     now = datetime.now()
+#     current_time = now.strftime("%H:%M")
+
+#     if not overview_state["risk_activity"] or overview_state["risk_activity"][-1]["time"] != current_time:
+#         overview_state["risk_activity"].append({
+#             "time": current_time,
+#             "low": 0,
+#             "medium": 0,
+#             "high": 0,
+#         })
+
+#     point = overview_state["risk_activity"][-1]
+#     level = _risk_level(risk).lower()
+#     point[level] += 1
+#     overview_state["risk_activity"] = overview_state["risk_activity"][-7:]
+
+
+# def _add_incident(risk: int, label: str, detection: str, source="LIVE CALL"):
+#     now = datetime.now()
+#     level = _risk_level(risk)
+#     overview_state["recent_incidents"].insert(0, {
+#         "id": f"VX-{now.strftime('%H%M%S%f')[:8]}",
+#         "time": now.strftime("%H:%M"),
+#         "caller": "Local Microphone",
+#         "role": "Live Call",
+#         "risk": int(risk),
+#         "level": level,
+#         "detection": detection,
+#         "transaction": "—",
+#         "source": source,
+#         "status": "OPEN" if level == "HIGH" else "UNDER REVIEW" if level == "MEDIUM" else "MONITORING",
+#     })
+#     overview_state["recent_incidents"] = overview_state["recent_incidents"][:10]
+
+
+# @app.get("/api/overview")
+# def get_overview():
+#     return overview_state
 
 
 # # ============================================================
@@ -157,6 +265,10 @@
 #             content,
 #             filename,
 #         )
+#         overview_state["calls_analyzed_today"] += 1
+#         overview_state["analysis_sources"]["uploaded_audio"] += 1
+#         risk = int(result.get("overall_risk", round(float(result.get("spoof_probability", 0)) * 100)))
+#         _record_risk_activity(risk)
 #         return result
 
 #     except HTTPException:
@@ -175,6 +287,10 @@
 # @app.websocket("/ws/live-call")
 # async def live_call(websocket: WebSocket):
 #     await websocket.accept()
+#     session_id = id(websocket)
+#     _live_sessions[session_id] = "LOW"
+#     overview_state["active_calls"] = len(_live_sessions)
+#     overview_state["analysis_sources"]["live_calls"] = max(overview_state["analysis_sources"]["live_calls"], len(_live_sessions))
 
 #     sample_rate = 16000
 #     audio_buffer = np.array([], dtype=np.int16)
@@ -253,6 +369,14 @@
 #                         transcript_risk,
 #                     )
 
+#                     if analysis["signals"]:
+#                         _add_incident(
+#                             combined_risk,
+#                             "TRANSCRIPT",
+#                             ", ".join(analysis["signals"]),
+#                             source="LIVE CALL • STT",
+#                         )
+
 #                     print(
 #                         f"[LIVE][STT] segments={transcript_count} "
 #                         f"signals={analysis['signals']} "
@@ -318,10 +442,32 @@
 #                     len(audio_buffer) >= window_samples
 #                     and samples_since_analysis >= step_samples
 #                 ):
+#                     # window = audio_buffer[-window_samples:]
+#                     # samples_since_analysis = 0
+
+#                     # try:
+#                     #     started_at = time.perf_counter()
+
+#                     #     result = await asyncio.to_thread(
+#                     #         analyze_pcm_audio,
+#                     #         window,
+#                     #         sample_rate,
+#                     #     )
+
 #                     window = audio_buffer[-window_samples:]
 #                     samples_since_analysis = 0
 
 #                     try:
+#                        # DEBUG: save the exact audio window sent to the CNN
+#                         debug_dir = os.path.join(os.path.dirname(__file__), "debug_live")
+#                         os.makedirs(debug_dir, exist_ok=True)
+
+#                         sf.write(
+#                             os.path.join(debug_dir, "latest_live_window.wav"),
+#                             window.astype(np.float32) / 32768.0,
+#                             sample_rate,
+#                     )
+
 #                         started_at = time.perf_counter()
 
 #                         result = await asyncio.to_thread(
@@ -343,11 +489,30 @@
 #                             )
 #                         )
 #                         analysis_count += 1
+#                         overview_state["calls_analyzed_today"] += 1
+#                         overview_state["analysis_sources"]["live_calls"] += 1
 
+#                         # Combine the latest audio/model risk with the latest
+#                         # transcript risk BEFORE using combined_risk anywhere.
 #                         combined_risk = combine_risk(
 #                             audio_risk,
 #                             transcript_risk,
 #                         )
+#                         _record_risk_activity(combined_risk)
+
+#                         new_level = _risk_level(combined_risk)
+#                         old_level = _live_sessions.get(session_id, "LOW")
+#                         if old_level != new_level:
+#                             if old_level == "HIGH":
+#                                 overview_state["high_risk_calls"] = max(0, overview_state["high_risk_calls"] - 1)
+#                             if new_level == "HIGH":
+#                                 overview_state["high_risk_calls"] += 1
+#                             _live_sessions[session_id] = new_level
+#                             _add_incident(
+#                                 combined_risk,
+#                                 result.get("label", "UNKNOWN"),
+#                                 f"Live risk changed to {new_level}",
+#                             )
 
 #                         await websocket.send_json({
 #                             "type": "analysis",
@@ -389,6 +554,10 @@
 #     except Exception as e:
 #         print("[LIVE] WebSocket error:", e)
 #     finally:
+#         old_level = _live_sessions.pop(session_id, "LOW")
+#         if old_level == "HIGH":
+#             overview_state["high_risk_calls"] = max(0, overview_state["high_risk_calls"] - 1)
+#         overview_state["active_calls"] = len(_live_sessions)
 #         print("[LIVE] Session ended")
 
 
@@ -411,6 +580,14 @@
 #         "timestamp": datetime.now().isoformat(),
 #     }
 
+# @app.get("/api/voice-profiles")
+# async def get_voice_profiles():
+#     return {
+#         "status": "ok",
+#         "profiles": voice_profiles,
+#         "count": len(voice_profiles),
+#     }
+
 
 # if __name__ == "__main__":
 #     import uvicorn
@@ -421,12 +598,13 @@
 #         port=8000,
 #         reload=True,
 #     )
-
 import asyncio
 import io
 import json
 import time
 import wave
+import os
+import soundfile as sf
 from datetime import datetime
 
 import numpy as np
@@ -842,30 +1020,46 @@ async def live_call(websocket: WebSocket):
                     continue
 
                 raw_bytes = message["bytes"]
+
                 if not raw_bytes:
                     continue
 
                 chunk = np.frombuffer(
                     raw_bytes,
-                    dtype=np.int16,
-                )
+                    dtype="<i2",
+    )
+                chunk_float = chunk.astype(np.float32) / 32768.0
 
+                if len(audio_buffer) % (4096 * 25) < len(chunk):
+                    print(
+                        "[BACKEND PCM]",
+                        "samples=", len(chunk),
+                        "rms=", float(np.sqrt(np.mean(chunk_float ** 2))),
+                        "peak=", float(np.max(np.abs(chunk_float))),
+    )
                 if chunk.size == 0:
                     continue
 
                 audio_buffer = np.concatenate([
-                    audio_buffer,
-                    chunk,
-                ])
+                audio_buffer,
+                chunk,
+    ])
+
                 samples_since_analysis += len(chunk)
 
-                # First analysis after 3 seconds, then every 1 second.
+    # Analyze every 1 second once we have
+    # at least 3 seconds of audio.
                 if (
                     len(audio_buffer) >= window_samples
                     and samples_since_analysis >= step_samples
                 ):
-                    window = audio_buffer[-window_samples:]
                     samples_since_analysis = 0
+
+        # IMPORTANT:
+        # Pass the entire rolling buffer.
+        # analyze_pcm_audio() selects the best
+        # 3-second speech-rich segment.
+                    window = audio_buffer.copy()
 
                     try:
                         started_at = time.perf_counter()
@@ -874,80 +1068,140 @@ async def live_call(websocket: WebSocket):
                             analyze_pcm_audio,
                             window,
                             sample_rate,
-                        )
+            )
 
                         processing_ms = round(
-                            (time.perf_counter() - started_at) * 1000
-                        )
+                        (
+                            time.perf_counter()
+                            - started_at
+                           ) * 1000
+            )
 
                         audio_risk = int(
                             result.get(
                                 "overall_risk",
                                 round(
-                                    float(result.get("spoof_probability", 0)) * 100
-                                ),
-                            )
-                        )
-                        analysis_count += 1
-                        overview_state["calls_analyzed_today"] += 1
-                        overview_state["analysis_sources"]["live_calls"] += 1
+                                    float(
+                                        result.get(
+                                            "spoof_probability",
+                                             0,
+                                        )
+                                    ) * 100
+                    ),
+                )
+            )
 
-                        # Combine the latest audio/model risk with the latest
-                        # transcript risk BEFORE using combined_risk anywhere.
+                        analysis_count += 1
+
+                        overview_state[
+                            "calls_analyzed_today"
+                        ] += 1
+
+                        overview_state[
+                            "analysis_sources"
+                        ]["live_calls"] += 1
+
                         combined_risk = combine_risk(
                             audio_risk,
                             transcript_risk,
-                        )
-                        _record_risk_activity(combined_risk)
+            )
 
-                        new_level = _risk_level(combined_risk)
-                        old_level = _live_sessions.get(session_id, "LOW")
+                        _record_risk_activity(
+                            combined_risk
+            )
+
+                        new_level = _risk_level(
+                            combined_risk
+            )
+
+                        old_level = _live_sessions.get(
+                            session_id,
+                            "LOW",
+            )
+
                         if old_level != new_level:
+
                             if old_level == "HIGH":
-                                overview_state["high_risk_calls"] = max(0, overview_state["high_risk_calls"] - 1)
+                                overview_state[
+                                    "high_risk_calls"
+                                ] = max(
+                                    0,
+                                    overview_state[
+                                        "high_risk_calls"
+                                    ] - 1,
+                    )
+
                             if new_level == "HIGH":
-                                overview_state["high_risk_calls"] += 1
-                            _live_sessions[session_id] = new_level
+                                overview_state[
+                                    "high_risk_calls"
+                                ] += 1
+
+                            _live_sessions[
+                                session_id
+                            ] = new_level
+
                             _add_incident(
                                 combined_risk,
-                                result.get("label", "UNKNOWN"),
+                                result.get(
+                                    "label",
+                                    "UNKNOWN",
+                    ),
                                 f"Live risk changed to {new_level}",
-                            )
+                )
 
-                        await websocket.send_json({
-                            "type": "analysis",
-                            "timestamp": datetime.now().isoformat(),
-                            **result,
-                            "processing_time_ms": processing_ms,
-                            "audio_risk": audio_risk,
-                            "transcript_risk": transcript_risk,
-                            "combined_risk": combined_risk,
-                            "combined_status": risk_band(combined_risk),
-                            "analysis_count": analysis_count,
-                            "transcript_count": transcript_count,
-                            "signal_count": signal_count,
-                        })
+            # Only send if socket is still connected.
+                        try:
+                            await websocket.send_json({
+                                "type": "analysis",
+                                "timestamp": datetime.now().isoformat(),
+                                **result,
+                                "processing_time_ms": processing_ms,
+                                "audio_risk": audio_risk,
+                                "transcript_risk": transcript_risk,
+                                "combined_risk": combined_risk,
+                                "combined_status": risk_band(
+                                    combined_risk
+                    ),
+                                "analysis_count": analysis_count,
+                                "transcript_count": transcript_count,
+                                "signal_count": signal_count,
+                })
+                        except Exception:
+                            break
 
-                        print(
-                            f"[LIVE] label={result.get('label', 'UNKNOWN')} "
-                            f"spoof={float(result.get('spoof_probability', 0)) * 100:.1f}% "
-                            f"bonafide={float(result.get('bonafide_probability', 0)) * 100:.1f}% "
-                            f"audio_risk={audio_risk} "
-                            f"transcript_risk={transcript_risk} "
-                            f"combined={combined_risk}"
-                        )
+                        if result.get("status") == "insufficient_audio":
+                            print(
+                                "[LIVE] "
+                                f"label=INSUFFICIENT_AUDIO "
+                                f"rms={result.get('audio_rms', 0):.6f} "
+                                f"active={result.get('active_ratio', 0):.2f}"
+                )
+                        else:
+                            print(
+                                "[LIVE] "
+                                f"label={result.get('label', 'UNKNOWN')} "
+                                f"spoof="
+                                f"{float(result.get('spoof_probability', 0)) * 100:.1f}% "
+                                f"bonafide="
+                                f"{float(result.get('bonafide_probability', 0)) * 100:.1f}% "
+                                f"audio_risk={audio_risk} "
+                                f"transcript_risk={transcript_risk} "
+                                f"combined={combined_risk}"
+                )
 
                     except Exception as e:
-                        print("[LIVE] Analysis error:", e)
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": str(e),
-                        })
+                            print(
+                                "[LIVE] Analysis error:",
+                                repr(e),
+            )
 
-                # Keep only the latest ~6 seconds.
-                max_buffer_samples = sample_rate * 6
-                if len(audio_buffer) > max_buffer_samples:
-                    audio_buffer = audio_buffer[-max_buffer_samples:]
+    # Keep latest 6 seconds.
+                    max_buffer_samples = sample_rate * 6
+
+                    if len(audio_buffer) > max_buffer_samples:
+                        audio_buffer = audio_buffer[
+                            -max_buffer_samples:
+        ]
 
     except WebSocketDisconnect:
         print("[LIVE] WebSocket disconnected")
