@@ -29,10 +29,23 @@
 //   const [speechSupported, setSpeechSupported] = useState(true);
 //   const [keywordFlags, setKeywordFlags] = useState([]);
 //   const [isLive, setIsLive] = useState(false);
+  
 
 //   const [risk, setRisk] = useState(0);
 
 //   const [spoofProbability, setSpoofProbability] =
+//     useState(0);
+
+//   const [bonafideProbability, setBonafideProbability] =
+//     useState(0);
+
+//   const [transcriptRisk, setTranscriptRisk] =
+//     useState(0);
+
+//   const [combinedRisk, setCombinedRisk] =
+//     useState(0);
+
+//   const [signalCount, setSignalCount] =
 //     useState(0);
 
 //   const [voiceRisk, setVoiceRisk] =
@@ -465,6 +478,18 @@
 
 //       detectTranscriptSignals(finalText);
 
+//       if (
+//         websocketRef.current &&
+//         websocketRef.current.readyState === WebSocket.OPEN
+//       ) {
+//         websocketRef.current.send(
+//           JSON.stringify({
+//             type: "transcript",
+//             text: finalText,
+//           })
+//         );
+//       }
+
 //       addAudit(
 //         "STT",
 //         `Speech segment transcribed: ${finalText.slice(0, 90)}${finalText.length > 90 ? "…" : ""}`
@@ -602,6 +627,14 @@
 //         setAnalysisCount(0);
 //         analysisCountRef.current = 0;
 //         setLastAnalysisAt(null);
+//         setTranscript([]);
+//         setInterimTranscript("");
+//         setKeywordFlags([]);
+//         setSignalCount(0);
+//         setSpoofProbability(0);
+//         setBonafideProbability(0);
+//         setTranscriptRisk(0);
+//         setCombinedRisk(0);
 //         challengeStateRef.current = "ready";
 //         setChallengeState("ready");
 //         setChallengeResult("No challenge started");
@@ -622,15 +655,16 @@
 //             .getUserMedia({
 //               audio: {
 //                 channelCount: 1,
-//                 echoCancellation: true,
+//                 echoCancellation: false,
 //                 noiseSuppression: false,
 //                 autoGainControl: false,
 //               },
 //             });
+        
 
 //         streamRef.current =
 //           stream;
-
+        
 
 //         // ----------------------------------------------------
 //         // WEBSOCKET
@@ -711,18 +745,20 @@
 //                 "analysis"
 //               ) {
 
-//                 setRisk(
-//                   Math.max(
-//                     0,
-//                     Math.min(
-//                       100,
-//                       Number(
-//                         data.overall_risk ||
-//                         0
-//                       )
+//                 const nextCombinedRisk = Math.max(
+//                   0,
+//                   Math.min(
+//                     100,
+//                     Number(
+//                       data.combined_risk ??
+//                       data.overall_risk ??
+//                       0
 //                     )
 //                   )
 //                 );
+
+//                 setRisk(nextCombinedRisk);
+//                 setCombinedRisk(nextCombinedRisk);
 
 //                 setSpoofProbability(
 //                   Number(
@@ -731,12 +767,28 @@
 //                   )
 //                 );
 
+//                 setBonafideProbability(
+//                   Number(
+//                     data.bonafide_probability ||
+//                     0
+//                   )
+//                 );
+
+//                 setTranscriptRisk(
+//                   Number(data.transcript_risk || 0)
+//                 );
+
+//                 setSignalCount(
+//                   Number(data.signal_count || 0)
+//                 );
+
 //                 setVoiceRisk(
 //                   data.voice_risk ||
 //                   "unknown"
 //                 );
 
 //                 setVerdict(
+//                   data.combined_status ||
 //                   data.verdict ||
 //                   "ANALYZING"
 //                 );
@@ -758,11 +810,13 @@
 
 //                 addAudit(
 //                   "MODEL",
-//                   `CNN window analyzed: ${data.label || "UNKNOWN"} · ${Math.round(Number(data.spoof_probability || 0) * 100)}% spoof signal`
+//                   `CNN window analyzed: ${data.label || "UNKNOWN"} · ${Math.round(Number(data.spoof_probability || 0) * 100)}% spoof · ${Math.round(Number(data.bonafide_probability || 0) * 100)}% bonafide · combined ${Math.round(Number(data.combined_risk ?? data.overall_risk ?? 0))}`
 //                 );
 
 //                 if (challengeStateRef.current === "listening") {
-//                   const currentRisk = Number(data.overall_risk || 0);
+//                   const currentRisk = Number(
+//                     data.combined_risk ?? data.overall_risk ?? 0
+//                   );
 //                   if (currentRisk < 50) {
 //                     challengeStateRef.current = "passed";
 //                     setChallengeState("passed");
@@ -774,6 +828,41 @@
 //                   }
 //                 }
 
+//               }
+
+//               if (data.type === "transcript_analysis") {
+//                 const nextTranscriptRisk = Number(
+//                   data.transcript_risk || 0
+//                 );
+//                 const nextCombinedRisk = Number(
+//                   data.combined_risk || 0
+//                 );
+
+//                 setTranscriptRisk(nextTranscriptRisk);
+//                 setCombinedRisk(nextCombinedRisk);
+//                 setRisk(
+//                   Math.max(
+//                     0,
+//                     Math.min(100, nextCombinedRisk)
+//                   )
+//                 );
+//                 setSignalCount(Number(data.signal_count || 0));
+
+//                 if (Array.isArray(data.signals) && data.signals.length) {
+//                   setKeywordFlags((prev) => [
+//                     ...new Set([
+//                       ...data.signals,
+//                       ...prev,
+//                     ]),
+//                   ].slice(0, 8));
+//                 }
+
+//                 addAudit(
+//                   "RISK",
+//                   data.signals?.length
+//                     ? `Transcript risk: ${data.signals.join(", ")} · combined ${nextCombinedRisk}`
+//                     : `Transcript analyzed · combined risk ${nextCombinedRisk}`
+//                 );
 //               }
 
 //               if (
@@ -834,7 +923,8 @@
 //         // ----------------------------------------------------
 //         // AUDIO CONTEXT
 //         // ----------------------------------------------------
-
+      
+         
 //         const audioContext =
 //           new (
 //             window.AudioContext ||
@@ -885,7 +975,7 @@
 //             const input =
 //               event.inputBuffer
 //                 .getChannelData(0);
-
+            
 //             // ----------------------------------------------
 //             // UPDATE VISUAL WAVEFORM
 //             // ----------------------------------------------
@@ -893,7 +983,7 @@
 //             updateWaveform(
 //               input
 //             );
-
+            
 
 //             // ----------------------------------------------
 //             // DOWNSAMPLE TO 16 KHZ
@@ -905,7 +995,7 @@
 //                 audioContext.sampleRate,
 //                 16000
 //               );
-
+             
 
 //             // ----------------------------------------------
 //             // CONVERT TO PCM16
@@ -1804,10 +1894,7 @@
 //                   title="Voice integrity"
 //                   text={
 //                     isLive
-//                       ? `Current spoof probability is ${Math.round(
-//                           spoofProbability *
-//                           100
-//                         )}%.`
+//                       ? `Spoof ${Math.round(spoofProbability * 100)}% · Bonafide ${Math.round(bonafideProbability * 100)}% · combined risk ${Math.round(combinedRisk)}.`
 //                       : "Waiting for audio input."
 //                   }
 //                 />
@@ -1820,7 +1907,7 @@
 //                   title="Continuous analysis"
 //                   text={
 //                     isLive
-//                       ? "Backend CNN analyzes a rolling three-second microphone window."
+//                       ? `Backend CNN: rolling 3-second window · ${analysisCount} analyzed · ${processingTime} ms last inference.`
 //                       : "Start monitoring to activate backend audio analysis."
 //                   }
 //                 />
@@ -1856,7 +1943,7 @@
 //                   title="Speech activity"
 //                   text={
 //                     isLive
-//                       ? `${transcript.length} final speech segment${transcript.length === 1 ? "" : "s"} transcribed${interimTranscript ? " · live speech detected" : ""}.`
+//                       ? `${transcript.length} final speech segment${transcript.length === 1 ? "" : "s"} · transcript risk ${Math.round(transcriptRisk)} · ${signalCount} signal${signalCount === 1 ? "" : "s"}${interimTranscript ? " · live speech detected" : ""}.`
 //                       : "No active speech stream."
 //                   }
 //                 />
@@ -1872,7 +1959,7 @@
 //                   text={
 //                     isLive
 //                       ? backendConnected
-//                         ? `VoxShield CNN live · ${analysisCount} window${analysisCount === 1 ? "" : "s"} analyzed.`
+//                         ? `CNN live · ${analysisCount} window${analysisCount === 1 ? "" : "s"} · combined risk ${Math.round(combinedRisk)}.`
 //                         : "Connecting to VoxShield CNN backend…"
 //                       : "VoxShield CNN is currently idle."
 //                   }
@@ -1944,6 +2031,32 @@
 //                     }
 //                   >
 //                     {verdict}
+//                   </strong>
+
+//                 </div>
+
+
+//                 <div className="transaction-row">
+
+//                   <span>
+//                     Spoof / Bonafide
+//                   </span>
+
+//                   <strong>
+//                     {Math.round(spoofProbability * 100)}% / {Math.round(bonafideProbability * 100)}%
+//                   </strong>
+
+//                 </div>
+
+
+//                 <div className="transaction-row">
+
+//                   <span>
+//                     Transcript risk
+//                   </span>
+
+//                   <strong>
+//                     {Math.round(transcriptRisk)} / 100
 //                   </strong>
 
 //                 </div>
@@ -3232,6 +3345,9 @@
 //     </div>
 //   );
 // }
+
+
+
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -3263,6 +3379,7 @@ export default function LiveCalls() {
   const [speechSupported, setSpeechSupported] = useState(true);
   const [keywordFlags, setKeywordFlags] = useState([]);
   const [isLive, setIsLive] = useState(false);
+  
 
   const [risk, setRisk] = useState(0);
 
@@ -3458,124 +3575,82 @@ export default function LiveCalls() {
   // ==========================================================
 
   const downsampleBuffer = (
-    buffer,
-    inputSampleRate,
-    outputSampleRate
-  ) => {
+  buffer,
+  inputSampleRate,
+  outputSampleRate
+) => {
+  if (inputSampleRate === outputSampleRate) {
+    return buffer;
+  }
 
-    if (
-      outputSampleRate ===
-      inputSampleRate
-    ) {
-      return buffer;
+  if (inputSampleRate < outputSampleRate) {
+    console.warn(
+      `[AUDIO] Cannot upsample ${inputSampleRate}Hz -> ${outputSampleRate}Hz`
+    );
+    return buffer;
+  }
+
+  const ratio = inputSampleRate / outputSampleRate;
+  const newLength = Math.round(buffer.length / ratio);
+
+  const result = new Float32Array(newLength);
+
+  let resultIndex = 0;
+
+  for (let i = 0; i < newLength; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.min(
+      Math.floor((i + 1) * ratio),
+      buffer.length
+    );
+
+    let sum = 0;
+    let count = 0;
+
+    for (let j = start; j < end; j++) {
+      sum += buffer[j];
+      count++;
     }
 
-    const ratio =
-      inputSampleRate /
-      outputSampleRate;
+    result[resultIndex++] =
+      count > 0 ? sum / count : 0;
+  }
 
-    const newLength =
-      Math.round(
-        buffer.length / ratio
-      );
-
-    const result =
-      new Float32Array(newLength);
-
-    let offsetResult = 0;
-    let offsetBuffer = 0;
-
-    while (
-      offsetResult <
-      result.length
-    ) {
-
-      const nextOffset =
-        Math.round(
-          (offsetResult + 1) *
-          ratio
-        );
-
-      let accum = 0;
-      let count = 0;
-
-      for (
-        let i = offsetBuffer;
-        i < nextOffset &&
-        i < buffer.length;
-        i++
-      ) {
-
-        accum += buffer[i];
-        count++;
-
-      }
-
-      result[offsetResult] =
-        count
-          ? accum / count
-          : 0;
-
-      offsetResult++;
-      offsetBuffer =
-        nextOffset;
-
-    }
-
-    return result;
-  };
+  return result;
+};
 
 
   // ==========================================================
   // FLOAT32 -> PCM16
   // ==========================================================
 
-  const floatTo16BitPCM = (
-    float32Array
-  ) => {
+  const floatTo16BitPCM = (float32Array) => {
+  const buffer = new ArrayBuffer(
+    float32Array.length * 2
+  );
 
-    const buffer =
-      new ArrayBuffer(
-        float32Array.length * 2
-      );
+  const view = new DataView(buffer);
 
-    const view =
-      new DataView(buffer);
+  for (let i = 0; i < float32Array.length; i++) {
+    const sample = Math.max(
+      -1,
+      Math.min(1, float32Array[i])
+    );
 
-    let offset = 0;
+    const value =
+      sample < 0
+        ? sample * 0x8000
+        : sample * 0x7fff;
 
-    for (
-      let i = 0;
-      i < float32Array.length;
-      i++
-    ) {
+    view.setInt16(
+      i * 2,
+      value,
+      true
+    );
+  }
 
-      const sample =
-        Math.max(
-          -1,
-          Math.min(
-            1,
-            float32Array[i]
-          )
-        );
-
-      const value =
-        sample < 0
-          ? sample * 0x8000
-          : sample * 0x7fff;
-
-      view.setInt16(
-        offset,
-        value,
-        true
-      );
-
-      offset += 2;
-    }
-
-    return buffer;
-  };
-
+  return buffer;
+};
 
   // ==========================================================
   // LIVE WAVEFORM
@@ -3887,16 +3962,37 @@ export default function LiveCalls() {
           await navigator.mediaDevices
             .getUserMedia({
               audio: {
-                channelCount: 1,
-                echoCancellation: true,
+                channelCount: {
+                  ideal:1,
+                  max:1,
+                },
+                echoCancellation: false,
                 noiseSuppression: false,
                 autoGainControl: false,
               },
             });
+        
 
         streamRef.current =
           stream;
 
+        // ----------------------------------------------------
+// MIC DEBUG INFO
+// ----------------------------------------------------
+        const track = stream.getAudioTracks()[0];
+
+        console.log(
+        "[MIC SETTINGS]",
+        track.getSettings()
+        );
+
+        if (track.getCapabilities) {
+        console.log(
+        "[MIC CAPABILITIES]",
+        track.getCapabilities()
+        );
+          }
+        
 
         // ----------------------------------------------------
         // WEBSOCKET
@@ -3947,6 +4043,8 @@ export default function LiveCalls() {
               JSON.stringify({
                 type: "start",
                 sample_rate: 16000,
+                channels: 1,
+                format: "pcm_s16le",
               })
             );
 
@@ -3976,6 +4074,29 @@ export default function LiveCalls() {
                 data.type ===
                 "analysis"
               ) {
+
+                const isInsufficientAudio =
+                  data.status === "insufficient_audio" ||
+                  data.label === "INSUFFICIENT AUDIO" ||
+                  data.verdict === "INSUFFICIENT AUDIO";
+
+                  if (isInsufficientAudio) {
+                    setRisk(0);
+                    setCombinedRisk(0);
+
+                    setSpoofProbability(0);
+                    setBonafideProbability(0);
+
+                    setVoiceRisk("unknown");
+                    setVerdict("INSUFFICIENT AUDIO");
+                    setStatusLabel("SPEAK CLEARLY");
+
+                    setProcessingTime(
+                      Number(data.processing_time_ms || 0)
+  );
+
+                    return;
+}
 
                 const nextCombinedRisk = Math.max(
                   0,
@@ -4152,116 +4273,195 @@ export default function LiveCalls() {
           };
 
 
+        
+      
+         
         // ----------------------------------------------------
-        // AUDIO CONTEXT
-        // ----------------------------------------------------
+// AUDIO CONTEXT
+// ----------------------------------------------------
 
-        const audioContext =
-          new (
-            window.AudioContext ||
-            window.webkitAudioContext
-          )();
+const AudioContextClass =
+  window.AudioContext ||
+  window.webkitAudioContext;
 
-        audioContextRef.current =
-          audioContext;
+const audioContext =
+  new AudioContextClass({
+    sampleRate: 16000,
+  });
 
+audioContextRef.current =
+  audioContext;
 
-        const source =
-          audioContext
-            .createMediaStreamSource(
-              stream
-            );
+console.log(
+  "[AUDIO CONTEXT]",
+  "requested=16000",
+  "actual=",
+  audioContext.sampleRate
+);
 
-        sourceRef.current =
-          source;
+// Some browsers create the context suspended.
+if (audioContext.state === "suspended") {
+  await audioContext.resume();
+}
 
+console.log(
+  "[AUDIO CONTEXT STATE]",
+  audioContext.state
+);
 
-        // ScriptProcessor works well
-        // for this local MVP.
+const source =
+  audioContext.createMediaStreamSource(
+    stream
+  );
 
-        const processor =
-          audioContext
-            .createScriptProcessor(
-              4096,
-              1,
-              1
-            );
+sourceRef.current = source;
 
-        processorRef.current =
-          processor;
+// ----------------------------------------------------
+// SCRIPT PROCESSOR
+// ----------------------------------------------------
 
+const processor =
+  audioContext.createScriptProcessor(
+    4096,
+    1,
+    1
+  );
 
-        processor.onaudioprocess =
-          (event) => {
+processorRef.current =
+  processor;
 
-            if (
-              !websocketRef.current ||
-              websocketRef.current
-                .readyState !==
-                WebSocket.OPEN
-            ) {
-              return;
-            }
+// ----------------------------------------------------
+// AUDIO PROCESSING
+// ----------------------------------------------------
 
-            const input =
-              event.inputBuffer
-                .getChannelData(0);
+let packetCount = 0;
+let totalSamplesSent = 0;
 
-            // ----------------------------------------------
-            // UPDATE VISUAL WAVEFORM
-            // ----------------------------------------------
+processor.onaudioprocess = (event) => {
+  if (
+    !websocketRef.current ||
+    websocketRef.current.readyState !==
+      WebSocket.OPEN
+  ) {
+    return;
+  }
 
-            updateWaveform(
-              input
-            );
+  const input =
+    event.inputBuffer.getChannelData(0);
 
+  // ----------------------------------------------
+  // MIC DEBUG / WAVEFORM
+  // ----------------------------------------------
 
-            // ----------------------------------------------
-            // DOWNSAMPLE TO 16 KHZ
-            // ----------------------------------------------
+  updateWaveform(input);
 
-            const downsampled =
-              downsampleBuffer(
-                input,
-                audioContext.sampleRate,
-                16000
-              );
+  // ----------------------------------------------
+  // CALCULATE CHUNK RMS + PEAK
+  // ----------------------------------------------
 
+  let sumSq = 0;
+  let peak = 0;
 
-            // ----------------------------------------------
-            // CONVERT TO PCM16
-            // ----------------------------------------------
+  for (let i = 0; i < input.length; i++) {
+    const sample = input[i];
 
-            const pcm =
-              floatTo16BitPCM(
-                downsampled
-              );
+    sumSq += sample * sample;
 
+    const abs = Math.abs(sample);
 
-            websocketRef.current
-              .send(pcm);
+    if (abs > peak) {
+      peak = abs;
+    }
+  }
 
-          };
+  const rms = Math.sqrt(
+    sumSq / Math.max(1, input.length)
+  );
+  
+  // ----------------------------------------------
+  // AUDIO RESAMPLING
+  // ----------------------------------------------
 
+  let audio16k;
 
-        source.connect(
-          processor
-        );
+  if (audioContext.sampleRate === 16000) {
+    // Browser already gave us 16 kHz.
+    audio16k = input;
+  } else {
+    // Fallback for browsers that ignore
+    // the requested 16 kHz context.
+    audio16k = downsampleBuffer(
+      input,
+      audioContext.sampleRate,
+      16000
+    );
+  }
 
-        // Keep ScriptProcessor active without sending the
-        // microphone audio back to the speakers.
-        const silentGain =
-          audioContext.createGain();
+  // ----------------------------------------------
+  // FLOAT32 -> PCM16
+  // ----------------------------------------------
 
-        silentGain.gain.value = 0;
+  const pcm =
+    floatTo16BitPCM(audio16k);
 
-        processor.connect(
-          silentGain
-        );
+  // ----------------------------------------------
+  // SEND TO BACKEND
+  // ----------------------------------------------
 
-        silentGain.connect(
-          audioContext.destination
-        );
+  websocketRef.current.send(pcm);
+
+  packetCount++;
+  totalSamplesSent += audio16k.length;
+
+  // Don't spam console on every audio callback.
+  if (packetCount % 25 === 0) {
+    console.log(
+      "[AUDIO STREAM]",
+      {
+        packetCount,
+        inputSampleRate:
+          audioContext.sampleRate,
+        inputSamples:
+          input.length,
+        outputSamples:
+          audio16k.length,
+        rms:
+          Number(rms.toFixed(6)),
+        peak:
+          Number(peak.toFixed(6)),
+        totalSamplesSent,
+        approximateSeconds:
+          Number(
+            (
+              totalSamplesSent / 16000
+            ).toFixed(2)
+          ),
+      }
+    );
+  }
+};
+
+// ----------------------------------------------------
+// CONNECT AUDIO GRAPH
+// ----------------------------------------------------
+
+source.connect(processor);
+
+// IMPORTANT:
+// ScriptProcessor needs an output connection
+// to stay active, but we don't want microphone
+// audio sent to speakers.
+
+const silentGain =
+  audioContext.createGain();
+
+silentGain.gain.value = 0;
+
+processor.connect(silentGain);
+
+silentGain.connect(
+  audioContext.destination
+);
 
       } catch (err) {
 
@@ -4282,154 +4482,306 @@ export default function LiveCalls() {
     };
 
 
-  // ==========================================================
-  // STOP LIVE CALL
-  // ==========================================================
+//   // ==========================================================
+//   // STOP LIVE CALL
+//   // ==========================================================
 
-  const stopLiveCall =
-    () => {
+//   const stopLiveCall =
+//     () => {
 
-      try {
+//       try {
 
-        if (recognitionRef.current) {
+//         if (recognitionRef.current) {
+//   try {
+//     recognitionRef.current.stop();
+//   } catch {}
+
+//   recognitionRef.current = null;
+// }
+
+//         if (
+//           websocketRef.current &&
+//           websocketRef.current.readyState ===
+//             WebSocket.OPEN
+//         ) {
+
+//           websocketRef.current.send(
+//             JSON.stringify({
+//               type: "stop",
+//             })
+//           );
+
+//           websocketRef.current.close();
+
+//         }
+
+//       } catch {}
+
+//       websocketRef.current =
+//         null;
+
+
+//       if (
+//         processorRef.current
+//       ) {
+
+//         try {
+//           processorRef.current.disconnect();
+//         } catch {}
+
+//       }
+
+//       processorRef.current =
+//         null;
+
+
+//       if (
+//         sourceRef.current
+//       ) {
+
+//         try {
+//           sourceRef.current.disconnect();
+//         } catch {}
+
+//       }
+
+//       sourceRef.current =
+//         null;
+
+
+//       if (
+//         audioContextRef.current
+//       ) {
+
+//         try {
+//           audioContextRef.current.close();
+//         } catch {}
+
+//       }
+
+//       audioContextRef.current =
+//         null;
+
+
+//       if (
+//         streamRef.current
+//       ) {
+
+//         streamRef.current
+//           .getTracks()
+//           .forEach(
+//             (track) =>
+//               track.stop()
+//           );
+
+//       }
+
+//       streamRef.current =
+//         null;
+
+
+//       if (
+//         animationRef.current
+//       ) {
+
+//         cancelAnimationFrame(
+//           animationRef.current
+//         );
+
+//       }
+
+
+//       if (challengeTimerRef.current) {
+//         clearTimeout(challengeTimerRef.current);
+//         challengeTimerRef.current = null;
+//       }
+
+//       setBackendConnected(false);
+//       setIsLive(false);
+
+//       if (elapsed > 0) {
+//         addAudit(
+//           formatTime(elapsed),
+//           "Monitoring session ended"
+//         );
+//       }
+
+//       setElapsed(0);
+
+//       setVerdict(
+//         "CALL ENDED"
+//       );
+
+//       setStatusLabel(
+//         "Start a new live monitoring session"
+//       );
+
+//       setVoiceRisk(
+//         "waiting"
+//       );
+
+//       setWaveform(
+//         Array.from(
+//           { length: 54 },
+//           () => 8
+//         )
+//       );
+
+//     };
+
+// ==========================================================
+// STOP LIVE CALL
+// ==========================================================
+
+const stopLiveCall = () => {
   try {
-    recognitionRef.current.stop();
-  } catch {}
-
-  recognitionRef.current = null;
-}
-
-        if (
-          websocketRef.current &&
-          websocketRef.current.readyState ===
-            WebSocket.OPEN
-        ) {
-
-          websocketRef.current.send(
-            JSON.stringify({
-              type: "stop",
-            })
-          );
-
-          websocketRef.current.close();
-
-        }
-
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
       } catch {}
 
-      websocketRef.current =
-        null;
+      recognitionRef.current = null;
+    }
 
-
-      if (
-        processorRef.current
-      ) {
-
-        try {
-          processorRef.current.disconnect();
-        } catch {}
-
-      }
-
-      processorRef.current =
-        null;
-
-
-      if (
-        sourceRef.current
-      ) {
-
-        try {
-          sourceRef.current.disconnect();
-        } catch {}
-
-      }
-
-      sourceRef.current =
-        null;
-
-
-      if (
-        audioContextRef.current
-      ) {
-
-        try {
-          audioContextRef.current.close();
-        } catch {}
-
-      }
-
-      audioContextRef.current =
-        null;
-
-
-      if (
-        streamRef.current
-      ) {
-
-        streamRef.current
-          .getTracks()
-          .forEach(
-            (track) =>
-              track.stop()
-          );
-
-      }
-
-      streamRef.current =
-        null;
-
-
-      if (
-        animationRef.current
-      ) {
-
-        cancelAnimationFrame(
-          animationRef.current
+    if (
+      websocketRef.current &&
+      websocketRef.current.readyState === WebSocket.OPEN
+    ) {
+      try {
+        websocketRef.current.send(
+          JSON.stringify({
+            type: "stop",
+          })
         );
+      } catch {}
 
-      }
+      try {
+        websocketRef.current.close();
+      } catch {}
+    }
+  } catch {}
 
+  websocketRef.current = null;
 
-      if (challengeTimerRef.current) {
-        clearTimeout(challengeTimerRef.current);
-        challengeTimerRef.current = null;
-      }
+  // --------------------------------------------------------
+  // STOP AUDIO PROCESSOR
+  // --------------------------------------------------------
 
-      setBackendConnected(false);
-      setIsLive(false);
+  if (processorRef.current) {
+    try {
+      processorRef.current.disconnect();
+    } catch {}
+  }
 
-      if (elapsed > 0) {
-        addAudit(
-          formatTime(elapsed),
-          "Monitoring session ended"
-        );
-      }
+  processorRef.current = null;
 
-      setElapsed(0);
+  // --------------------------------------------------------
+  // STOP AUDIO SOURCE
+  // --------------------------------------------------------
 
-      setVerdict(
-        "CALL ENDED"
-      );
+  if (sourceRef.current) {
+    try {
+      sourceRef.current.disconnect();
+    } catch {}
+  }
 
-      setStatusLabel(
-        "Start a new live monitoring session"
-      );
+  sourceRef.current = null;
 
-      setVoiceRisk(
-        "waiting"
-      );
+  // --------------------------------------------------------
+  // CLOSE AUDIO CONTEXT
+  // --------------------------------------------------------
 
-      setWaveform(
-        Array.from(
-          { length: 54 },
-          () => 8
-        )
-      );
+  if (audioContextRef.current) {
+    try {
+      audioContextRef.current.close();
+    } catch {}
+  }
 
-    };
+  audioContextRef.current = null;
 
+  // --------------------------------------------------------
+  // STOP MICROPHONE
+  // --------------------------------------------------------
 
+  if (streamRef.current) {
+    streamRef.current
+      .getTracks()
+      .forEach((track) => {
+        try {
+          track.stop();
+        } catch {}
+      });
+  }
+
+  streamRef.current = null;
+
+  // --------------------------------------------------------
+  // STOP WAVEFORM ANIMATION
+  // --------------------------------------------------------
+
+  if (animationRef.current) {
+    cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+  }
+
+  // --------------------------------------------------------
+  // STOP CHALLENGE TIMER
+  // --------------------------------------------------------
+
+  if (challengeTimerRef.current) {
+    clearTimeout(challengeTimerRef.current);
+    challengeTimerRef.current = null;
+  }
+
+  // --------------------------------------------------------
+  // SESSION UI STATE
+  // --------------------------------------------------------
+
+  setBackendConnected(false);
+  setIsLive(false);
+
+  if (elapsed > 0) {
+    addAudit(
+      formatTime(elapsed),
+      "Monitoring session ended"
+    );
+  }
+
+  setElapsed(0);
+
+  // IMPORTANT:
+  // Clear stale model values after the call ends.
+  setRisk(0);
+  setCombinedRisk(0);
+  setSpoofProbability(0);
+  setBonafideProbability(0);
+  setTranscriptRisk(0);
+  setSignalCount(0);
+  setProcessingTime(0);
+
+  analysisCountRef.current = 0;
+  setAnalysisCount(0);
+  setLastAnalysisAt(null);
+
+  setVerdict("NO SIGNAL");
+
+  setStatusLabel(
+    "Start a new live monitoring session"
+  );
+
+  setVoiceRisk("waiting");
+
+  setKeywordFlags([]);
+
+  setInterimTranscript("");
+
+  setWaveform(
+    Array.from(
+      { length: 54 },
+      () => 8
+    )
+  );
+};
   // ==========================================================
   // LIVE VOICE CHALLENGE
   // ==========================================================
@@ -4476,8 +4828,16 @@ export default function LiveCalls() {
   // RISK COLOR CLASS
   // ==========================================================
 
+  // const riskClass =
+  //   risk >= 70
+  //     ? "danger"
+  //     : risk >= 35
+  //       ? "warning"
+  //       : "safe";
   const riskClass =
-    risk >= 70
+  !isLive
+    ? "safe"
+    : risk >= 70
       ? "danger"
       : risk >= 35
         ? "warning"
@@ -4847,7 +5207,7 @@ export default function LiveCalls() {
             </div>
 
 
-            <div className="risk-grid">
+            {/* <div className="risk-grid">
 
               <RiskCard
                 title="Voice Integrity Risk"
@@ -4889,7 +5249,56 @@ export default function LiveCalls() {
                 type="cyan"
               />
 
-            </div>
+            </div> */}
+            <div className="risk-grid">
+
+  <RiskCard
+    title="Voice Integrity Risk"
+    value={
+      isLive
+        ? `${Math.round(
+            spoofProbability * 100
+          )}%`
+        : "—"
+    }
+    type={
+      !isLive
+        ? "cyan"
+        : spoofProbability >= 0.5
+          ? "danger"
+          : "cyan"
+    }
+  />
+
+  <RiskCard
+    title="Model Risk Score"
+    value={
+      isLive
+        ? `${Math.round(risk)}%`
+        : "—"
+    }
+    type={
+      !isLive
+        ? "cyan"
+        : risk >= 70
+          ? "danger"
+          : risk >= 35
+            ? "warning"
+            : "cyan"
+    }
+  />
+
+  <RiskCard
+    title="Detection Status"
+    value={
+      isLive
+        ? "LIVE"
+        : "READY"
+    }
+    type="cyan"
+  />
+
+</div>
 
           </section>
 
@@ -4901,7 +5310,7 @@ export default function LiveCalls() {
           <section className="main-grid">
 
 
-            <div className="glass-card">
+            {/* <div className="glass-card">
 
               <CardHeader
                 icon={
@@ -4990,7 +5399,113 @@ export default function LiveCalls() {
 
               </div>
 
-            </div>
+            </div> */}
+          <div className="glass-card">
+
+  <CardHeader
+    icon={
+      <Activity
+        size={17}
+      />
+    }
+    title="Continuous Trust Score"
+    subtitle={
+      isLive
+        ? "Updated from live model analysis"
+        : "Waiting for live audio analysis"
+    }
+  />
+
+  <div className="trust-score">
+
+    <strong>
+      {isLive
+        ? Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(100 - risk)
+            )
+          )
+        : 0}
+    </strong>
+
+    <span>
+      /100
+    </span>
+
+  </div>
+
+  <div className="critical-small">
+
+    {!isLive
+      ? "NO SIGNAL"
+      : risk >= 70
+        ? "HIGH RISK"
+        : risk >= 35
+          ? "REVIEW"
+          : "MONITORING"}
+
+  </div>
+
+  <div className="trust-line">
+
+    <span
+      style={{
+        width: isLive
+          ? `${Math.max(
+              2,
+              100 - risk
+            )}%`
+          : "2%",
+      }}
+    />
+
+  </div>
+
+  <div className="signal-list">
+
+    <SignalItem
+      name="Spoof probability"
+      value={
+        isLive
+          ? Math.round(combinedRisk)
+          : "—"
+      }
+    />
+
+    <SignalItem
+      name="Overall model risk"
+      value={
+        isLive
+          ? `${Math.round(risk)}/100`
+          : "—"
+      }
+    />
+
+    <SignalItem
+      name="Model processing"
+      value={
+        isLive
+          ? `${Math.round(
+              processingTime
+            )} ms`
+          : "—"
+      }
+    />
+
+    <SignalItem
+      name="Detection state"
+      value={
+        isLive
+          ? "LIVE"
+          : "STANDBY"
+      }
+    />
+
+  </div>
+
+</div>
 
 
             <div className="glass-card">
@@ -5083,7 +5598,9 @@ export default function LiveCalls() {
                   </span>
 
                   <span className="timeline-score">
-                    {processingTime}
+                    {isLive && processingTime
+                      ? `${Math.round(processingTime)} ms`
+                      : "—"}
                   </span>
 
                 </div>
