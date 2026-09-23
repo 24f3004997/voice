@@ -1,21 +1,14 @@
-# Python
 __pycache__/
-*.py[cod]
 .venv/
 venv/
 .pytest_cache/
 
-# Node / Vite
 node_modules/
 frontend/dist/
-.npm-cache/
-.pip-cache/
-.pip-temp/
 
-# Local uploads and credentials
 *.env
-!*.env.example
 uploads/
+
 *.wav
 *.mp3
 *.m4a
@@ -23,11 +16,12 @@ uploads/
 *.ogg
 *.webm
 
-# Editor and operating-system files
 .vscode/
 .idea/
-.DS_Store
-Thumbs.db
 
-*.pt
+training/dataset/
+training/feature_cache/
+training/checkpoints/
+training/metadata/
 
+backend/debug_live/
