@@ -5,6 +5,7 @@ import librosa
 import numpy as np
 import torch
 import torch.nn as nn
+import soundfile as sf
 
 
 # ---------------------------------------------------------
@@ -563,65 +564,86 @@ def analyze_pcm_audio(
     # -----------------------------------------------------
     # Check the selected window
     # -----------------------------------------------------
-#     debug_path = os.path.join(
-#     BASE_DIR,
-#     "backend",
-#     "debug_live",
-#     "selected_live_window.wav",
-# )
+    debug_path = os.path.join(
+    BASE_DIR,
+    "backend",
+    "debug_live",
+    "selected_live_window.wav",
+)
 
-#     os.makedirs(
-#         os.path.dirname(debug_path),
-#         exist_ok=True,
-# )
+    os.makedirs(
+        os.path.dirname(debug_path),
+        exist_ok=True,
+)
 
-#     sf.write(
-#     debug_path,
-#     best_audio,
-#     TARGET_SR,
-# )
+    sf.write(
+    debug_path,
+    best_audio,
+    TARGET_SR,
+)
 
-#     rms = float(
-#         np.sqrt(
-#             np.mean(
-#                 np.square(best_audio)
-#             )
-#         )
-#     )
+    rms = float(
+        np.sqrt(
+            np.mean(
+                np.square(best_audio)
+            )
+        )
+    )
 
-#     active_ratio = float(
-#         np.mean(
-#             np.abs(best_audio) > 0.01
-#         )
-#     )
+    active_ratio = float(
+        np.mean(
+            np.abs(best_audio) > 0.01
+        )
+    )
 
-#     # Slightly more permissive for real microphone speech.
-#     if (
-#         rms < 0.003
-#         or active_ratio < 0.04
-#     ):
-#         return {
-#             "status": "insufficient_audio",
-#             "label": "INSUFFICIENT AUDIO",
-#             "status_label": "INSUFFICIENT AUDIO",
-#             "verdict": "INSUFFICIENT AUDIO",
-#             "overall_risk": 0,
-#             "spoof_probability": 0.0,
-#             "bonafide_probability": 0.0,
-#             "voice_risk": "unknown",
-#             "action": "SPEAK CLEARLY",
-#             "recommendation": (
-#                 "Not enough usable speech was detected "
-#                 "in the current live audio window."
-#             ),
-#             "model_name": "VoxShield CNN",
-#             "audio_rms": round(
-#                 rms,
-#                 6,
-#             ),
-#             "active_ratio": round(
-#                 active_ratio,
-#                 4,
-#             ),
-#         }
-    
+    # Slightly more permissive for real microphone speech.
+    if (
+        rms < 0.003
+        or active_ratio < 0.04
+    ):
+        return {
+            "status": "insufficient_audio",
+            "label": "INSUFFICIENT AUDIO",
+            "status_label": "INSUFFICIENT AUDIO",
+            "verdict": "INSUFFICIENT AUDIO",
+            "overall_risk": 0,
+            "spoof_probability": 0.0,
+            "bonafide_probability": 0.0,
+            "voice_risk": "unknown",
+            "action": "SPEAK CLEARLY",
+            "recommendation": (
+                "Not enough usable speech was detected "
+                "in the current live audio window."
+            ),
+            "model_name": "VoxShield CNN",
+            "audio_rms": round(
+                rms,
+                6,
+            ),
+            "active_ratio": round(
+                active_ratio,
+                4,
+            ),
+        }
+
+    # -----------------------------------------------------
+    # CNN prediction
+    # -----------------------------------------------------
+
+    result = _predict_waveform(
+        best_audio,
+        TARGET_SR,
+    )
+
+    # Attach live audio quality metrics
+    result["audio_rms"] = round(
+        rms,
+        6,
+    )
+
+    result["active_ratio"] = round(
+        active_ratio,
+        4,
+    )
+
+    return result
