@@ -23,7 +23,7 @@
 //   const [error, setError] = useState(null);
 
 
-//   // 1. BACKEND FETCH
+//   // 1. BACKEND FETCHf
 //   useEffect(() => {
 
 //     let mounted = true;
@@ -661,7 +661,7 @@
 //     </>
 //   );
 // }
-
+import { API_BASE_URL } from "../config";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -690,7 +690,8 @@ export default function Overview() {
 
     const loadOverview = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/overview");
+        //const response = await fetch("http://127.0.0.1:8000/api/overview");
+        const response = await fetch(`${API_BASE_URL}/api/overview`);
         if (!response.ok) throw new Error("Failed to load overview");
         const data = await response.json();
         if (mounted) {
