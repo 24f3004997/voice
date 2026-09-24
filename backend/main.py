@@ -1163,20 +1163,19 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-
-
 # ============================================================
 # MODEL IMPORTS
 # ============================================================
 
-try:
-    from .model import analyze_audio_file, analyze_pcm_audio
-    from .transcript_risk import analyze_transcript
-except ImportError:
-    from model import analyze_audio_file, analyze_pcm_audio
-    from transcript_risk import analyze_transcript
+from .model import analyze_audio_file, analyze_pcm_audio
 
-
+def analyze_transcript(text):
+    return {
+        "transcript_risk": 0,
+        "signals": [],
+        "matched_phrases": [],
+        "semantic_matches": [],
+    }
 # ============================================================
 # APP
 # ============================================================
