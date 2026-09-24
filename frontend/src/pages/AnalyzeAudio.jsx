@@ -1,15 +1,3 @@
-// import React,{useState} from "react";
-// import { UploadCloud, UserRound, Activity, FileAudio, X } from "lucide-react";
-// import { Shell, PageTitle, SectionTitle } from "../components/Layout";
-
-// export default function AnalyzeAudio(){
-//  const [file,setFile]=useState(null),[drag,setDrag]=useState(false);
-//  const pick=e=>setFile(e.target.files?.[0]||null);
-//  return <Shell><PageTitle eyebrow="Upload a voice recording to evaluate voice integrity, speaker similarity and fraud-related signals" title="ANALYZE AUDIO"/><div className="content analyze-content"><div className="upload-layout">
-//  <section className="panel upload-card"><SectionTitle icon={<UploadCloud size={16}/>} title="Upload recording" subtitle="WAV, MP3, M4A, FLAC, OGG, WebM · Maximum 25 MB"/><label className={"dropzone "+(drag?"drag":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);setFile(e.dataTransfer.files?.[0]||null)}}><UploadCloud size={28}/><b>{file?file.name:"Drag & drop an audio file here"}</b><span>{file?`${Math.round(file.size/1024)} KB selected`:"WAV, MP3, M4A, FLAC, OGG, WebM · Maximum 25 MB"}</span><input type="file" accept="audio/*,video/*" onChange={pick}/><button className="choose-btn" type="button">Choose file</button></label>{file&&<div className="selected-file"><FileAudio size={15}/><span>{file.name}</span><button onClick={()=>setFile(null)}><X size={14}/></button></div>}</section>
-//  <section className="panel compare-card"><SectionTitle icon={<UserRound size={16}/>} title="Compare with registered voice" subtitle="Optional speaker verification"/><select><option>None</option><option>Demo CFO</option><option>Demo CEO</option><option>Demo Finance Manager</option></select><p className="muted">Without a profile, only voice integrity analysis is performed.</p><div className="caution"><b>Interpret with caution.</b> High speaker similarity does not prove the voice is genuine. A cloned voice may closely match the registered speaker.</div><button className="primary-btn analyze-btn" disabled={!file}><Activity size={14}/> Analyze Audio</button></section>
-//  </div></div></Shell>
-// }
 
 import React, { useState } from "react";
 import {
@@ -57,13 +45,18 @@ export default function AnalyzeAudio() {
 
       formData.append("file", file);
 
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL ||
+        "http://127.0.0.1:8000";
+
       const response = await fetch(
-        "http://127.0.0.1:8000/api/analyse",
+        `${API_BASE_URL}/api/analyse`,
         {
           method: "POST",
           body: formData,
         }
       );
+        
 
       const data = await response.json();
 

@@ -649,9 +649,13 @@ export default function LiveCalls() {
         // WEBSOCKET
         // ----------------------------------------------------
 
+        const WS_BASE_URL =
+          import.meta.env.VITE_WS_URL ||
+          "ws://127.0.0.1:8000";
+
         const websocket =
           new WebSocket(
-            "ws://127.0.0.1:8000/ws/live-call"
+            `${WS_BASE_URL}/ws/live-call`
           );
 
         websocket.binaryType =
