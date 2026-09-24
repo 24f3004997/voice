@@ -9,6 +9,7 @@
 //  const list=filter==="All"?incidents:incidents.filter(x=>x.level===filter.toUpperCase()||(filter==="Open"&&x.status==="OPEN")||(filter==="Resolved"&&x.status==="RESOLVED"));
 //  return <Shell><PageTitle eyebrow="Review flagged voice security incidents" title="INVESTIGATIONS"/><div className="content"><div className="filters">{["All","Critical","High","Medium","Low","Open","Resolved"].map(f=><button className={filter===f?"selected":""} onClick={()=>setFilter(f)} key={f}>{f}</button>)}</div><section className="panel"><SectionTitle icon={<FileAudio size={15}/>} title="Investigation Queue" subtitle="5 cases in current view · live calls and uploaded audio use the same risk engine"/><IncidentTable rows={list}/></section></div></Shell>
 // }
+import { API_BASE_URL } from "./config";
 import React, { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -36,9 +37,7 @@ export default function Investigations() {
 
     const loadInvestigations = async () => {
       try {
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/overview"
-        );
+        const response = await fetch(`${API_BASE_URL}/api/overview`)
 
         if (!response.ok) {
           throw new Error("Failed to load investigations");

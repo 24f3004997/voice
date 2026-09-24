@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config";
+import { WS_BASE_URL } from "./config";
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -651,7 +651,7 @@ export default function LiveCalls() {
 
         const WS_BASE_URL =
           import.meta.env.VITE_WS_URL ||
-          "ws://127.0.0.1:8000";
+          "WS_BASE_URL";
 
         const websocket =
           new WebSocket(new WebSocket(`${WS_BASE_URL}/ws/live-call`)
