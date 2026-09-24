@@ -651,21 +651,15 @@ export default function LiveCalls() {
 
         const WS_BASE_URL =
           import.meta.env.VITE_WS_URL ||
-          "WS_BASE_URL";
+          "wss://voxshield-api-1te6.onrender.com";
 
-        const websocket =
-          new WebSocket(new WebSocket(`${WS_BASE_URL}/ws/live-call`)
-            ///`${import.meta.env.VITE_WS_URL}/ws/live-call`
-         /// );
-          
-          
+        const websocket = new WebSocket(
+          `${WS_BASE_URL}/ws/live-call`
+        );
 
-        websocket.binaryType =
-          "arraybuffer";
+        websocket.binaryType = "arraybuffer";
 
-        websocketRef.current =
-          websocket;
-
+        websocketRef.current = websocket;
 
         websocket.onopen =
           () => {
