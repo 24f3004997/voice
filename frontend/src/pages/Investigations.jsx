@@ -9,6 +9,17 @@
 //  const list=filter==="All"?incidents:incidents.filter(x=>x.level===filter.toUpperCase()||(filter==="Open"&&x.status==="OPEN")||(filter==="Resolved"&&x.status==="RESOLVED"));
 //  return <Shell><PageTitle eyebrow="Review flagged voice security incidents" title="INVESTIGATIONS"/><div className="content"><div className="filters">{["All","Critical","High","Medium","Low","Open","Resolved"].map(f=><button className={filter===f?"selected":""} onClick={()=>setFilter(f)} key={f}>{f}</button>)}</div><section className="panel"><SectionTitle icon={<FileAudio size={15}/>} title="Investigation Queue" subtitle="5 cases in current view · live calls and uploaded audio use the same risk engine"/><IncidentTable rows={list}/></section></div></Shell>
 // }
+// import React,{useState} from "react";
+// import { FileAudio } from "lucide-react";
+// import { Shell, PageTitle, SectionTitle } from "../components/Layout";
+// import IncidentTable from "../components/IncidentTable";
+// import { incidents } from "../data";
+
+// export default function Investigations(){
+//  const [filter,setFilter]=useState("All");
+//  const list=filter==="All"?incidents:incidents.filter(x=>x.level===filter.toUpperCase()||(filter==="Open"&&x.status==="OPEN")||(filter==="Resolved"&&x.status==="RESOLVED"));
+//  return <Shell><PageTitle eyebrow="Review flagged voice security incidents" title="INVESTIGATIONS"/><div className="content"><div className="filters">{["All","Critical","High","Medium","Low","Open","Resolved"].map(f=><button className={filter===f?"selected":""} onClick={()=>setFilter(f)} key={f}>{f}</button>)}</div><section className="panel"><SectionTitle icon={<FileAudio size={15}/>} title="Investigation Queue" subtitle="5 cases in current view · live calls and uploaded audio use the same risk engine"/><IncidentTable rows={list}/></section></div></Shell>
+// }
 import { API_BASE_URL } from "./config";
 import React, { useEffect, useState } from "react";
 import {
@@ -372,64 +383,50 @@ export default function Investigations() {
         <style>{`
 
           /* =====================================================
-             PAGE
+             PAGE BACKGROUND & GLOW
           ===================================================== */
 
           .investigations-page {
             position: relative;
             min-height: 100%;
-            color: #dce8e9;
+            color: #f8fafc; /* Crisp white text */
           }
 
+          /* Cyan Neon Glow */
           .investigations-page::before {
             content: "";
             position: fixed;
-
-            width: 500px;
-            height: 500px;
-
-            left: 0;
-            top: 120px;
-
-            background: rgba(0, 190, 200, .08);
-
-            filter: blur(110px);
-
+            width: 600px;
+            height: 600px;
+            left: -150px;
+            top: 50px;
+            background: rgba(6, 182, 212, 0.12);
+            filter: blur(150px);
             pointer-events: none;
-
             z-index: 0;
           }
 
+          /* Purple Neon Glow */
           .investigations-page::after {
             content: "";
             position: fixed;
-
-            width: 500px;
-            height: 500px;
-
-            right: 0;
-            bottom: 0;
-
-            background: rgba(25, 55, 130, .09);
-
-            filter: blur(120px);
-
+            width: 600px;
+            height: 600px;
+            right: -100px;
+            bottom: -100px;
+            background: rgba(139, 92, 246, 0.12);
+            filter: blur(150px);
             pointer-events: none;
-
             z-index: 0;
           }
 
           .investigations-content {
             position: relative;
             z-index: 1;
-
             width: min(1180px, calc(100% - 48px));
-
             margin: 0 auto;
-
             padding: 30px 0 80px;
           }
-
 
           /* =====================================================
              FILTER BAR
@@ -439,30 +436,14 @@ export default function Investigations() {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             gap: 20px;
-
-            margin-bottom: 18px;
-
-            padding: 15px 17px;
-
-            border-radius: 17px;
-
-            background:
-              linear-gradient(
-                145deg,
-                rgba(13, 34, 38, .72),
-                rgba(5, 20, 24, .65)
-              );
-
-            border: 1px solid rgba(105, 183, 188, .11);
-
-            box-shadow:
-              0 15px 50px rgba(0,0,0,.13),
-              inset 0 1px 0 rgba(255,255,255,.025);
-
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6); /* Sleek dark blue/grey */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
           }
 
           .filter-heading {
@@ -471,113 +452,68 @@ export default function Investigations() {
 
           .filter-heading span {
             display: block;
-
-            margin-bottom: 3px;
-
-            color: rgba(72, 193, 201, .55);
-
-            font-size: 9px;
+            margin-bottom: 4px;
+            color: #64748b;
+            font-size: 10px;
             font-weight: 600;
-
-            letter-spacing: .11em;
+            letter-spacing: 0.1em;
           }
 
           .filter-heading strong {
-            color: #d7e5e6;
-
-            font-size: 12px;
-            font-weight: 500;
+            color: #f8fafc;
+            font-size: 14px;
+            font-weight: 600;
           }
 
           .filters {
             display: flex;
             align-items: center;
-
-            gap: 7px;
-
+            gap: 8px;
             flex-wrap: wrap;
-
             justify-content: flex-end;
           }
 
           .filters button {
-            padding: 8px 13px;
-
+            padding: 8px 16px;
             border-radius: 999px;
-
-            color: rgba(164, 187, 189, .65);
-
-            background: rgba(8, 25, 28, .48);
-
-            border: 1px solid rgba(101, 175, 180, .10);
-
+            color: #94a3b8;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid transparent;
             cursor: pointer;
-
-            font-size: 10px;
-            font-weight: 500;
-
-            transition:
-              color .18s ease,
-              background .18s ease,
-              border-color .18s ease,
-              transform .18s ease;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s ease;
           }
 
           .filters button:hover {
-            color: #cce0e1;
-
-            background: rgba(19, 49, 53, .55);
-
-            border-color: rgba(78, 192, 199, .18);
-
-            transform: translateY(-1px);
+            color: #f8fafc;
+            background: rgba(30, 41, 59, 0.8);
           }
 
           .filters button.selected {
-            color: #8ce1e4;
-
-            background: rgba(28, 159, 166, .13);
-
-            border-color: rgba(48, 202, 208, .24);
-
-            box-shadow:
-              inset 0 1px 0 rgba(255,255,255,.03),
-              0 0 18px rgba(20, 190, 198, .05);
+            color: #000000;
+            background: #22d3ee; /* Cyan active state */
+            border-color: #22d3ee;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
           }
-
 
           /* =====================================================
              MAIN PANEL
           ===================================================== */
 
           .investigation-panel {
-            padding: 20px;
-
-            border-radius: 20px;
-
-            background:
-              linear-gradient(
-                145deg,
-                rgba(13, 34, 38, .78),
-                rgba(5, 20, 24, .70)
-              );
-
-            border: 1px solid rgba(105, 183, 188, .12);
-
-            box-shadow:
-              0 22px 65px rgba(0,0,0,.18),
-              inset 0 1px 0 rgba(255,255,255,.03);
-
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-
+            padding: 24px;
+            border-radius: 16px;
+            background: rgba(11, 17, 32, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
             overflow: hidden;
           }
 
           .investigation-panel :global(.section-title) {
-            margin-bottom: 18px;
+            margin-bottom: 24px;
           }
-
 
           /* =====================================================
              TABLE
@@ -585,77 +521,50 @@ export default function Investigations() {
 
           .table-wrapper {
             width: 100%;
-
             overflow-x: auto;
-
-            border-radius: 13px;
-
-            border: 1px solid rgba(96, 170, 175, .10);
-
-            background: rgba(3, 17, 20, .35);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.3);
           }
 
           .investigation-table {
             width: 100%;
-
-            border-collapse: separate;
-            border-spacing: 0;
-
+            border-collapse: collapse;
             min-width: 720px;
           }
 
           .investigation-table th {
-            padding: 13px 14px;
-
+            padding: 14px 16px;
             text-align: left;
-
-            color: rgba(91, 190, 197, .55);
-
-            background: rgba(9, 29, 32, .60);
-
-            border-bottom: 1px solid rgba(100, 176, 181, .10);
-
-            font-size: 9px;
-            font-weight: 600;
-
-            letter-spacing: .10em;
-          }
-
-          .investigation-table th:first-child {
-            padding-left: 16px;
-          }
-
-          .investigation-table th:last-child {
-            width: 48px;
+            color: #64748b;
+            background: rgba(30, 41, 59, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
           }
 
           .investigation-table td {
-            padding: 13px 14px;
-
-            color: rgba(181, 202, 203, .70);
-
-            background: rgba(4, 19, 22, .30);
-
-            border-bottom: 1px solid rgba(91, 163, 168, .07);
-
-            font-size: 11px;
-
+            padding: 14px 16px;
+            color: #cbd5e1;
+            background: rgba(15, 23, 42, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 12px;
             vertical-align: middle;
           }
 
           .investigation-table tbody tr {
-            transition:
-              background .18s ease;
+            transition: background 0.2s ease;
           }
 
           .investigation-table tbody tr:hover td {
-            background: rgba(21, 53, 57, .28);
+            background: rgba(30, 41, 59, 0.6); /* Hover effect on row */
           }
 
           .investigation-table tbody tr:last-child td {
             border-bottom: none;
           }
-
 
           /* =====================================================
              INCIDENT CELL
@@ -664,26 +573,18 @@ export default function Investigations() {
           .incident-cell {
             display: flex;
             align-items: center;
-
-            gap: 10px;
+            gap: 12px;
           }
 
           .incident-icon {
-            width: 31px;
-            height: 31px;
-
+            width: 36px;
+            height: 36px;
             display: grid;
             place-items: center;
-
             flex-shrink: 0;
-
             border-radius: 8px;
-
-            color: #35cbd0;
-
-            background: rgba(30, 189, 196, .07);
-
-            border: 1px solid rgba(42, 196, 202, .13);
+            color: #22d3ee;
+            background: rgba(34, 211, 238, 0.1);
           }
 
           .incident-main {
@@ -692,97 +593,73 @@ export default function Investigations() {
 
           .incident-id {
             display: block;
-
-            color: #d5e3e4;
-
-            font-size: 11px;
+            color: #f8fafc;
+            font-size: 13px;
             font-weight: 600;
           }
 
           .incident-description {
             display: block;
-
             max-width: 260px;
-
-            margin-top: 3px;
-
-            color: rgba(130, 161, 164, .52);
-
-            font-size: 9px;
-
+            margin-top: 4px;
+            color: #94a3b8;
+            font-size: 11px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
           }
 
-
           /* =====================================================
-             BADGES
+             BADGES (NEON GLOW STYLES)
           ===================================================== */
 
           .level-badge,
           .status-badge {
             display: inline-flex;
             align-items: center;
-
-            padding: 5px 8px;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 600;
-
-            letter-spacing: .03em;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
           }
 
           .level-critical {
-            color: #ff7c88;
-
-            background: rgba(255, 71, 88, .08);
-
-            border: 1px solid rgba(255, 71, 88, .14);
+            color: #ef4444; /* Alert Red */
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
           }
 
           .level-high {
-            color: #ff9b6f;
-
-            background: rgba(255, 125, 75, .07);
-
-            border: 1px solid rgba(255, 125, 75, .13);
+            color: #f97316; /* Orange */
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
           }
 
           .level-medium {
-            color: #e9bd55;
-
-            background: rgba(225, 174, 46, .07);
-
-            border: 1px solid rgba(225, 174, 46, .12);
+            color: #f59e0b; /* Yellow/Amber */
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
           }
 
           .level-low {
-            color: #66d7b0;
-
-            background: rgba(53, 187, 139, .07);
-
-            border: 1px solid rgba(53, 187, 139, .12);
+            color: #10b981; /* Green */
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
           }
 
           .status-open {
-            color: #e3bd64;
-
-            background: rgba(215, 169, 56, .07);
-
-            border: 1px solid rgba(215, 169, 56, .12);
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
           }
 
           .status-resolved {
-            color: #6fdaa8;
-
-            background: rgba(58, 184, 123, .07);
-
-            border: 1px solid rgba(58, 184, 123, .12);
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
           }
-
 
           /* =====================================================
              RISK SCORE
@@ -791,25 +668,21 @@ export default function Investigations() {
           .table-risk {
             display: flex;
             align-items: baseline;
-
-            gap: 3px;
+            gap: 4px;
           }
 
           .table-risk strong {
-            color: #ff7783;
-
-            font-size: 13px;
+            color: #ef4444; /* Red for high risk */
+            font-size: 14px;
           }
 
           .table-risk span {
-            color: rgba(143, 169, 171, .40);
-
-            font-size: 8px;
+            color: #64748b;
+            font-size: 10px;
           }
 
-
           /* =====================================================
-             ARROW
+             ARROW ACTION
           ===================================================== */
 
           .action-cell {
@@ -817,126 +690,67 @@ export default function Investigations() {
           }
 
           .open-incident {
-            width: 31px;
-            height: 31px;
-
+            width: 32px;
+            height: 32px;
             display: grid;
             place-items: center;
-
             margin-left: auto;
-
             border-radius: 8px;
-
-            color: rgba(97, 197, 203, .70);
-
-            background: rgba(25, 135, 141, .06);
-
-            border: 1px solid rgba(65, 187, 194, .10);
-
+            color: #94a3b8;
+            background: transparent;
+            border: none;
             cursor: pointer;
-
-            transition:
-              color .18s ease,
-              background .18s ease,
-              border-color .18s ease,
-              transform .18s ease;
+            transition: all 0.2s ease;
           }
 
           .open-incident:hover {
-            color: #a0eff1;
-
-            background: rgba(28, 170, 177, .12);
-
-            border-color: rgba(65, 205, 211, .24);
-
+            color: #22d3ee;
+            background: rgba(34, 211, 238, 0.1);
             transform: translateX(2px);
           }
 
-
           /* =====================================================
-             EMPTY
+             EMPTY STATE
           ===================================================== */
 
           .empty-state {
             padding: 40px !important;
-
             text-align: center;
-
-            color: rgba(140, 168, 170, .50) !important;
-
-            font-size: 12px !important;
+            color: #64748b !important;
+            font-size: 13px !important;
           }
 
-
           /* =====================================================
-             MODAL BACKDROP
+             MODAL BACKDROP & CONTAINER
           ===================================================== */
 
           .modal-backdrop {
             position: fixed;
-
             inset: 0;
-
             z-index: 9999;
-
             display: flex;
-
             align-items: center;
             justify-content: center;
-
-            padding: 30px;
-
-            background: rgba(1, 8, 10, .72);
-
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            padding: 25px;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
           }
-
-
-          /* =====================================================
-             MODAL
-          ===================================================== */
 
           .incident-modal {
             width: min(720px, 100%);
-
-            max-height: min(780px, calc(100vh - 60px));
-
+            max-height: min(800px, calc(100vh - 60px));
             overflow-y: auto;
-
-            border-radius: 22px;
-
-            background:
-              linear-gradient(
-                145deg,
-                rgba(16, 40, 44, .96),
-                rgba(5, 20, 24, .97)
-              );
-
-            border: 1px solid rgba(104, 194, 199, .17);
-
-            box-shadow:
-              0 35px 100px rgba(0,0,0,.50),
-              inset 0 1px 0 rgba(255,255,255,.045);
-
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-
-            animation: modalIn .18s ease-out;
+            border-radius: 16px;
+            background: #0f172a; /* Solid slate dark */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(34, 211, 238, 0.1);
+            animation: modalIn .2s ease-out;
           }
 
           @keyframes modalIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px) scale(.985);
-            }
-
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(15px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
           }
-
 
           /* =====================================================
              MODAL HEADER
@@ -946,194 +760,128 @@ export default function Investigations() {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             gap: 20px;
-
-            padding: 20px 22px;
-
-            border-bottom: 1px solid rgba(105, 181, 186, .10);
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(30, 41, 59, 0.5);
           }
 
           .modal-title-area {
             display: flex;
             align-items: center;
-
-            gap: 12px;
+            gap: 14px;
           }
 
           .modal-icon {
-            width: 40px;
-            height: 40px;
-
+            width: 44px;
+            height: 44px;
             display: grid;
             place-items: center;
-
             border-radius: 10px;
-
-            color: #ff7884;
-
-            background: rgba(255, 70, 87, .07);
-
-            border: 1px solid rgba(255, 78, 94, .14);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
           }
 
           .modal-eyebrow {
             display: block;
-
             margin-bottom: 4px;
-
-            color: rgba(80, 193, 200, .56);
-
-            font-size: 9px;
-            font-weight: 600;
-
-            letter-spacing: .11em;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
           }
 
           .modal-title-area h2 {
             margin: 0;
-
-            color: #e0ebec;
-
-            font-size: 19px;
+            color: #f8fafc;
+            font-size: 18px;
             font-weight: 600;
           }
 
           .close-modal {
-            width: 34px;
-            height: 34px;
-
-            display: grid;
-            place-items: center;
-
-            flex-shrink: 0;
-
-            border-radius: 9px;
-
-            color: rgba(172, 195, 196, .65);
-
-            background: rgba(100, 140, 143, .06);
-
-            border: 1px solid rgba(100, 170, 175, .10);
-
+            background: transparent;
+            border: none;
+            color: #64748b;
             cursor: pointer;
+            padding: 5px;
           }
 
           .close-modal:hover {
-            color: #e3eeee;
-
-            background: rgba(100, 170, 175, .11);
+            color: #f8fafc;
           }
 
-
           /* =====================================================
-             SUMMARY
+             MODAL SUMMARY
           ===================================================== */
 
           .modal-summary {
             display: grid;
-
-            grid-template-columns:
-              repeat(3, minmax(0, 1fr));
-
-            gap: 10px;
-
-            padding: 18px 22px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            padding: 20px 24px;
           }
 
           .summary-item {
             min-width: 0;
-
-            padding: 12px;
-
+            padding: 16px;
             border-radius: 10px;
-
-            background: rgba(3, 18, 21, .45);
-
-            border: 1px solid rgba(99, 172, 177, .09);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
           }
 
           .summary-item span {
             display: block;
-
-            margin-bottom: 6px;
-
-            color: rgba(133, 163, 165, .53);
-
-            font-size: 9px;
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
           }
 
           .summary-item strong {
             display: block;
-
-            color: #d4e2e3;
-
-            font-size: 11px;
-
+            color: #f8fafc;
+            font-size: 13px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
           }
 
-          .summary-item .critical {
-            color: #ff6d79;
-          }
-
-          .summary-item .high {
-            color: #ff9870;
-          }
-
-          .summary-item .medium {
-            color: #e5ba52;
-          }
-
-          .summary-item .low {
-            color: #68d9ae;
-          }
-
-          .modal-status {
-            color: #8ed8b1 !important;
-          }
-
+          .modal-risk.critical { color: #ef4444; }
+          .modal-risk.high { color: #f97316; }
+          .modal-risk.medium { color: #f59e0b; }
+          .modal-risk.low { color: #10b981; }
+          
+          .modal-status { color: #22d3ee !important; text-transform: uppercase; }
 
           /* =====================================================
-             DETAILS
+             MODAL DETAILS
           ===================================================== */
 
           .details-heading {
-            padding: 0 22px 10px;
+            padding: 0 24px 12px;
           }
 
           .details-heading span {
-            color: rgba(79, 192, 199, .55);
-
-            font-size: 9px;
-            font-weight: 600;
-
-            letter-spacing: .11em;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
           }
 
           .details-grid {
             display: grid;
-
-            grid-template-columns:
-              repeat(2, minmax(0, 1fr));
-
-            gap: 8px;
-
-            padding: 0 22px 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 0 24px 24px;
           }
 
           .detail-item {
             min-width: 0;
-
-            padding: 12px;
-
-            border-radius: 9px;
-
-            background: rgba(3, 18, 21, .40);
-
-            border: 1px solid rgba(96, 170, 175, .08);
+            padding: 14px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
           }
 
           .detail-item.full-width {
@@ -1142,132 +890,95 @@ export default function Investigations() {
 
           .detail-label {
             display: block;
-
-            margin-bottom: 5px;
-
-            color: rgba(126, 158, 160, .52);
-
-            font-size: 8px;
+            margin-bottom: 6px;
+            color: #94a3b8;
+            font-size: 9px;
             font-weight: 600;
-
             text-transform: uppercase;
-            letter-spacing: .07em;
+            letter-spacing: 0.05em;
           }
 
           .detail-value {
             display: block;
-
-            color: #cbdadb;
-
-            font-size: 11px;
+            color: #e2e8f0;
+            font-size: 12px;
             line-height: 1.5;
-
             overflow-wrap: anywhere;
           }
 
-
           /* =====================================================
-             FOOTER
+             MODAL FOOTER
           ===================================================== */
 
           .modal-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
-            gap: 15px;
-
-            padding: 15px 22px;
-
-            border-top: 1px solid rgba(105, 181, 186, .10);
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
           }
 
           .footer-status {
             display: flex;
             align-items: center;
-
-            gap: 7px;
-
-            color: rgba(142, 182, 162, .65);
-
-            font-size: 10px;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 11px;
           }
 
+          .resolved-icon { color: #10b981; }
+          .open-icon { color: #f59e0b; }
+
           .modal-close-button {
-            padding: 9px 15px;
-
+            padding: 10px 20px;
             border-radius: 8px;
-
-            color: #b8cccd;
-
-            background: rgba(100, 145, 148, .07);
-
-            border: 1px solid rgba(100, 170, 175, .11);
-
+            color: #fff;
+            background: #334155;
+            border: none;
             cursor: pointer;
-
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 600;
+            transition: 0.2s;
           }
 
           .modal-close-button:hover {
-            color: #e0eeee;
-
-            background: rgba(100, 170, 175, .12);
+            background: #475569;
           }
-
 
           /* =====================================================
              RESPONSIVE
           ===================================================== */
 
           @media (max-width: 850px) {
-
             .filter-bar {
               align-items: flex-start;
               flex-direction: column;
             }
-
             .filters {
               justify-content: flex-start;
             }
-
           }
 
-
           @media (max-width: 650px) {
-
             .investigations-content {
               width: calc(100% - 22px);
-
               padding-top: 20px;
             }
-
             .investigation-panel {
-              padding: 14px;
+              padding: 16px;
             }
-
-            .modal-backdrop {
-              padding: 15px;
-            }
-
-            .modal-summary {
+            .modal-summary, .details-grid {
               grid-template-columns: 1fr;
             }
-
-            .details-grid {
-              grid-template-columns: 1fr;
-            }
-
             .modal-footer {
               align-items: flex-start;
               flex-direction: column;
+              gap: 15px;
             }
-
             .modal-close-button {
               width: 100%;
             }
-
           }
 
         `}</style>

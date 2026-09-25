@@ -2825,34 +2825,41 @@ const stopLiveCall = () => {
             box-sizing: border-box;
           }
 
+          /* =====================================================
+             PAGE BACKGROUND & GLOW EFFECTS
+          ===================================================== */
           .live-page {
             min-height: 100%;
-            color: #dce8e9;
+            color: #f8fafc;
             position: relative;
           }
 
+          /* Cyan Neon Glow on the left */
           .live-page::before {
             content: "";
             position: fixed;
-            width: 480px;
-            height: 480px;
-            left: 2%;
-            top: 110px;
-            background: rgba(0,190,200,.10);
-            filter: blur(100px);
+            width: 600px;
+            height: 600px;
+            left: -150px;
+            top: 50px;
+            background: rgba(6, 182, 212, 0.12);
+            filter: blur(150px);
             pointer-events: none;
+            z-index: 0;
           }
 
+          /* Purple Neon Glow on the right */
           .live-page::after {
             content: "";
             position: fixed;
-            width: 500px;
-            height: 500px;
-            right: 2%;
-            top: 420px;
-            background: rgba(20,55,120,.10);
-            filter: blur(110px);
+            width: 600px;
+            height: 600px;
+            right: -100px;
+            bottom: -100px;
+            background: rgba(139, 92, 246, 0.12);
+            filter: blur(150px);
             pointer-events: none;
+            z-index: 0;
           }
 
           .live-content {
@@ -2863,21 +2870,25 @@ const stopLiveCall = () => {
             padding: 30px 0 80px;
           }
 
+          /* =====================================================
+             LIVE PILLS & DOTS
+          ===================================================== */
           .live-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 9px 16px;
             border-radius: 999px;
-            background: rgba(90,20,28,.20);
-            border: 1px solid rgba(255,90,105,.20);
-            color: #ff858f;
+            background: rgba(239, 68, 68, 0.1); /* Modern Red */
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.05em;
           }
 
           .live-pill.active {
-            box-shadow: 0 0 20px rgba(255,80,100,.12);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
           }
 
           .live-dot,
@@ -2886,41 +2897,33 @@ const stopLiveCall = () => {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #28d6d9;
+            background: #22d3ee; /* Cyan default */
           }
 
           .live-dot,
           .active-dot.pulse,
           .live-status-dot.pulse {
-            background: #ff6876;
-            box-shadow: 0 0 12px rgba(255,104,118,.8);
+            background: #ef4444; /* Red pulse for Live */
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
             animation: livePulse 1.2s infinite;
           }
 
           @keyframes livePulse {
-            0%,100% {
-              opacity: 1;
-              transform: scale(1);
-            }
-            50% {
-              opacity: .35;
-              transform: scale(.7);
-            }
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .4; transform: scale(.7); }
           }
 
+          /* =====================================================
+             MAIN PANELS (GLASSMORPHISM)
+          ===================================================== */
           .incident-card {
-            padding: 22px;
-            border-radius: 22px;
-            background: linear-gradient(
-              145deg,
-              rgba(14,35,39,.78),
-              rgba(6,21,25,.74)
-            );
-            border: 1px solid rgba(114,185,190,.13);
-            box-shadow:
-              0 25px 80px rgba(0,0,0,.22),
-              inset 0 1px 0 rgba(255,255,255,.035);
-            backdrop-filter: blur(22px);
+            padding: 24px;
+            border-radius: 16px;
+            background: rgba(11, 17, 32, 0.5); /* Deep slate background */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
           }
 
           .incident-header {
@@ -2941,10 +2944,11 @@ const stopLiveCall = () => {
             align-items: center;
             gap: 8px;
             margin-bottom: 9px;
-            color: rgba(77,204,211,.70);
+            color: #22d3ee; /* Cyan text */
             font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .09em;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
           }
 
           .caller-name {
@@ -2956,12 +2960,13 @@ const stopLiveCall = () => {
 
           .caller-name h2 {
             margin: 0;
-            font-size: 25px;
-            color: #e4eeee;
+            font-size: 26px;
+            color: #f8fafc;
+            font-weight: 600;
           }
 
           .caller-name span {
-            color: rgba(166,189,191,.58);
+            color: #94a3b8;
             font-size: 14px;
           }
 
@@ -2969,27 +2974,32 @@ const stopLiveCall = () => {
             display: flex;
             gap: 8px;
             margin-top: 10px;
-            color: rgba(143,173,176,.56);
+            color: #64748b;
             font-size: 12px;
           }
 
+          /* =====================================================
+             RISK SCORES
+          ===================================================== */
           .risk-score {
             min-height: 108px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 18px;
-            background: rgba(30,30,30,.25);
-            border: 1px solid rgba(100,180,186,.15);
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
           }
 
           .risk-score.danger {
-            border-color: rgba(255,91,107,.28);
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
           }
 
           .risk-score.warning {
-            border-color: rgba(255,193,70,.28);
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.05);
           }
 
           .score-row {
@@ -2999,51 +3009,57 @@ const stopLiveCall = () => {
           }
 
           .score-row strong {
-            color: #64d9d9;
+            color: #22d3ee;
             font-size: 38px;
             line-height: 1;
+            font-weight: 700;
           }
 
           .risk-score.danger .score-row strong {
-            color: #ff7c89;
+            color: #ef4444; /* Modern Red */
           }
 
           .risk-score.warning .score-row strong {
-            color: #ffc94d;
+            color: #f59e0b; /* Modern Amber */
           }
 
           .score-row span {
-            color: rgba(188,167,170,.52);
+            color: #64748b;
             font-size: 12px;
           }
 
           .score-label {
             margin-top: 10px;
-            color: #7edfe1;
-            font-size: 9px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
             letter-spacing: .08em;
+            text-transform: uppercase;
             text-align: center;
           }
 
           .risk-score.danger .score-label {
-            color: #ff7883;
+            color: #ef4444;
           }
 
+          /* =====================================================
+             VOICE SIGNAL & TRANSCRIPT BOXES
+          ===================================================== */
           .voice-signal-box,
           .transcript-box {
-            border-radius: 17px;
-            background: rgba(3,19,22,.62);
-            border: 1px solid rgba(100,180,186,.11);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
           }
 
           .voice-signal-box {
             margin-top: 17px;
-            padding: 15px 17px 14px;
+            padding: 16px;
           }
 
           .transcript-box {
-            margin-top: 13px;
-            padding: 16px 19px 18px;
+            margin-top: 16px;
+            padding: 16px 20px;
           }
 
           .box-header {
@@ -3056,18 +3072,21 @@ const stopLiveCall = () => {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: rgba(83,199,207,.66);
+            color: #94a3b8;
             font-size: 10px;
-            font-weight: 600;
-            letter-spacing: .10em;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
           }
 
           .live-status {
             display: flex;
             align-items: center;
             gap: 7px;
-            color: #ff7883;
+            color: #ef4444;
             font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
           }
 
           .waveform {
@@ -3076,7 +3095,7 @@ const stopLiveCall = () => {
             align-items: center;
             justify-content: center;
             gap: 5px;
-            margin-top: 4px;
+            margin-top: 10px;
             overflow: hidden;
           }
 
@@ -3085,94 +3104,148 @@ const stopLiveCall = () => {
             min-height: 8px;
             display: block;
             border-radius: 99px;
-            background: linear-gradient(
-              to bottom,
-              rgba(55,211,217,.88),
-              rgba(25,121,129,.48)
-            );
+            background: linear-gradient(to bottom, #22d3ee, rgba(34, 211, 238, 0.2));
             transition: height .08s linear;
           }
 
           .small-live {
             padding: 4px 8px;
             border-radius: 999px;
-            color: #ff7f89;
-            background: rgba(255,78,95,.08);
-            border: 1px solid rgba(255,78,95,.13);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
             font-size: 9px;
+            font-weight: 700;
           }
 
+          /* =====================================================
+             TRANSCRIPT CONTENT
+          ===================================================== */
           .transcript-content {
             display: flex;
             flex-direction: column;
             gap: 7px;
             margin-top: 14px;
+            max-height: 230px;
+            overflow-y: auto;
+            padding-right: 8px;
           }
 
           .transcript-content p {
             margin: 0;
-            color: rgba(192,210,211,.72);
+            color: #cbd5e1;
             font-size: 14px;
           }
 
           .transcript-content .listening {
-            color: #e9b1b7;
-            font-weight: 600;
+            color: #94a3b8;
+            font-style: italic;
           }
 
           .muted-line {
-            color: rgba(143,173,176,.45) !important;
+            color: #64748b !important;
             font-size: 12px !important;
           }
 
+          .transcript-line {
+            display: grid;
+            grid-template-columns: 55px 1fr;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+          }
+
+          .transcript-time {
+            color: #22d3ee;
+            font-size: 10px;
+            font-weight: 600;
+            padding-top: 2px;
+          }
+
+          .transcript-text {
+            color: #f8fafc;
+            font-size: 13px;
+            line-height: 1.5;
+          }
+
+          .transcript-line.interim {
+            opacity: .6;
+          }
+
+          .transcript-line.interim .transcript-text {
+            color: #22d3ee;
+          }
+
+          .transcript-warning {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            font-size: 11px;
+            margin-bottom: 10px;
+          }
+
+          /* =====================================================
+             LIVE CONTROLS
+          ===================================================== */
           .live-control {
             display: flex;
             justify-content: center;
-            margin-top: 17px;
+            margin-top: 20px;
           }
 
           .start-live-btn,
           .stop-live-btn {
             border: 0;
-            border-radius: 10px;
-            padding: 12px 22px;
-            font-weight: 700;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 12px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 9px;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
           }
 
           .start-live-btn {
-            background: #1fc3c5;
-            color: #041013;
+            background: #22d3ee;
+            color: #020617; /* Very dark blue */
           }
+          .start-live-btn:hover { background: #06b6d4; }
 
           .stop-live-btn {
-            background: rgba(255,70,85,.12);
-            color: #ff7b87;
-            border: 1px solid rgba(255,80,95,.25);
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
           }
+          .stop-live-btn:hover { background: rgba(239, 68, 68, 0.2); }
 
           .stop-live-btn span {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #ff6876;
+            background: #ef4444;
           }
 
           .live-error {
-            margin-top: 14px;
-            padding: 11px 14px;
-            border: 1px solid rgba(255,80,95,.2);
-            background: rgba(80,20,28,.2);
-            color: #ff9aa3;
-            border-radius: 9px;
+            margin-top: 16px;
+            padding: 12px 16px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border-radius: 8px;
             display: flex;
-            gap: 8px;
+            gap: 10px;
             font-size: 12px;
           }
 
+          /* =====================================================
+             RISK SECTION & GRIDS
+          ===================================================== */
           .risk-section {
             margin-top: 40px;
           }
@@ -3181,130 +3254,129 @@ const stopLiveCall = () => {
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
-            margin-bottom: 17px;
+            margin-bottom: 20px;
           }
 
           .section-heading span {
             display: block;
             margin-bottom: 6px;
-            color: rgba(67,188,198,.55);
+            color: #94a3b8;
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: .12em;
+            text-transform: uppercase;
           }
 
           .section-heading h2 {
             margin: 0;
-            color: #dce9ea;
+            color: #f8fafc;
             font-size: 20px;
+            font-weight: 600;
           }
 
           .section-heading > svg {
-            color: rgba(42,191,201,.60);
+            color: #22d3ee;
+          }
+
+          .risk-grid, .main-grid {
+            display: grid;
+            gap: 16px;
           }
 
           .risk-grid {
-            display: grid;
             grid-template-columns: repeat(3,minmax(0,1fr));
-            gap: 18px;
           }
-
-          .risk-card {
-            padding: 20px;
-            border-radius: 18px;
-            background: rgba(5,25,29,.68);
-            border: 1px solid rgba(100,180,186,.11);
-          }
-
-          .risk-card-title {
-            color: rgba(150,180,183,.65);
-            font-size: 11px;
-          }
-
-          .risk-card-value {
-            margin-top: 8px;
-            font-size: 28px;
-            font-weight: 700;
-            color: #5ee1e1;
-          }
-
-          .risk-card.danger .risk-card-value {
-            color: #ff7180;
-          }
-
-          .risk-card.warning .risk-card-value {
-            color: #ffc94d;
-          }
-
           .main-grid {
-            display: grid;
             grid-template-columns: repeat(2,minmax(0,1fr));
-            gap: 18px;
             margin-top: 24px;
           }
 
-          .glass-card {
+          .risk-card, .glass-card {
             padding: 20px;
-            border-radius: 18px;
-            background: rgba(5,24,28,.66);
-            border: 1px solid rgba(100,180,186,.11);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
           }
 
+          .risk-card-title {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+          }
+
+          .risk-card-value {
+            margin-top: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #22d3ee;
+          }
+
+          .risk-card.danger .risk-card-value { color: #ef4444; }
+          .risk-card.warning .risk-card-value { color: #f59e0b; }
+
+          /* =====================================================
+             CARD CONTENTS (Glass cards)
+          ===================================================== */
           .card-header {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
           }
 
           .card-header-icon {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             display: grid;
             place-items: center;
             border-radius: 8px;
-            color: #38d2d6;
-            border: 1px solid rgba(50,210,215,.25);
+            color: #22d3ee;
+            background: rgba(34, 211, 238, 0.1);
           }
 
           .card-header strong {
             display: block;
-            font-size: 13px;
-            color: #dce9ea;
+            font-size: 14px;
+            color: #f8fafc;
           }
 
           .card-header span {
             display: block;
-            margin-top: 3px;
-            color: rgba(143,173,176,.50);
-            font-size: 9px;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 10px;
           }
 
           .trust-score {
-            margin-top: 22px;
+            margin-top: 24px;
             display: flex;
             align-items: baseline;
-            gap: 5px;
+            gap: 6px;
           }
 
           .trust-score strong {
-            font-size: 45px;
-            color: #ff7583;
+            font-size: 48px;
+            color: #ef4444;
+            font-weight: 700;
+            line-height: 1;
           }
 
           .trust-score span {
-            color: rgba(170,180,185,.45);
+            color: #64748b;
           }
 
           .critical-small {
-            margin-top: 2px;
-            color: #ff7883;
+            margin-top: 6px;
+            color: #ef4444;
             font-size: 10px;
-            letter-spacing: .12em;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
           }
 
           .trust-line {
             height: 4px;
-            margin-top: 13px;
+            margin-top: 16px;
             background: rgba(255,255,255,.05);
             border-radius: 99px;
             overflow: hidden;
@@ -3313,188 +3385,113 @@ const stopLiveCall = () => {
           .trust-line span {
             display: block;
             height: 100%;
-            background: #ff6876;
+            background: #ef4444;
             transition: width .3s ease;
           }
 
           .detected-signals {
-  margin-top: 15px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,.05);
-}
-
-.detected-title {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #e6d08a;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.signal-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 9px;
-}
-
-.signal-tags span {
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: rgba(255,190,50,.07);
-  border: 1px solid rgba(255,190,50,.15);
-  color: #e5c66c;
-  font-size: 9px;
-}
-
-          .signal-list {
-            margin-top: 17px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,.05);
           }
 
-          .signal-item {
+          .detected-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f59e0b;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .signal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+          }
+
+          .signal-tags span {
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            font-size: 10px;
+            font-weight: 600;
+          }
+
+          /* Lists inside cards */
+          .signal-list, .timeline-list, .flag-list, .audit-list {
+            margin-top: 20px;
+          }
+
+          .signal-item, .transaction-row, .audit-item {
             display: flex;
             justify-content: space-between;
-            padding: 9px 0;
-            border-bottom: 1px solid rgba(255,255,255,.035);
-            font-size: 11px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
           }
 
-          .signal-item span {
-            color: rgba(153,181,183,.55);
-          }
-
-          .signal-item strong {
-            color: #dbe8e9;
-          }
-
-          .timeline-list {
-            margin-top: 18px;
-          }
+          .signal-item span, .transaction-row span { color: #94a3b8; }
+          .signal-item strong, .transaction-row strong { color: #f8fafc; }
 
           .timeline-row {
             display: grid;
             grid-template-columns: 55px 1fr 45px;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,.035);
-            font-size: 11px;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
           }
 
-          .timeline-time {
-            color: #35cbd0;
+          .timeline-time, .audit-time {
+            color: #22d3ee;
+            font-weight: 600;
           }
 
-          .timeline-text {
-            color: rgba(186,207,208,.66);
+          .timeline-text, .audit-text {
+            color: #cbd5e1;
           }
 
           .timeline-score {
             text-align: right;
-            color: #ff7883;
-          }
-
-          .flag-list {
-            margin-top: 17px;
+            color: #ef4444;
+            font-weight: 600;
           }
 
           .flag-item {
             display: flex;
-            gap: 11px;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,.035);
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,.05);
           }
 
-          .flag-icon {
-            color: #32ced2;
-            padding-top: 2px;
-          }
+          .flag-icon { color: #22d3ee; padding-top: 2px; }
 
           .flag-item strong {
             display: block;
-            color: #dce8e9;
-            font-size: 12px;
+            color: #f8fafc;
+            font-size: 13px;
           }
 
           .flag-item span {
             display: block;
             margin-top: 4px;
-            color: rgba(150,180,183,.55);
-            font-size: 10px;
+            color: #94a3b8;
+            font-size: 11px;
             line-height: 1.5;
           }
 
-          .transcript-content {
-  max-height: 230px;
-  overflow-y: auto;
-  padding-right: 8px;
-}
+          .danger-value { color: #ef4444 !important; }
 
-.transcript-line {
-  display: grid;
-  grid-template-columns: 55px 1fr;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255,255,255,.035);
-}
-
-.transcript-time {
-  color: #38cbd0;
-  font-size: 9px;
-  padding-top: 2px;
-}
-
-.transcript-text {
-  color: #d9e4e5;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.transcript-line.interim {
-  opacity: .55;
-}
-
-.transcript-line.interim .transcript-text {
-  color: #7bd7da;
-}
-
-.transcript-warning {
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(255,180,50,.07);
-  border: 1px solid rgba(255,180,50,.16);
-  color: #e7c56d;
-  font-size: 11px;
-}
-
-          .transaction-box {
-            margin-top: 17px;
-          }
-
-          .transaction-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,.035);
-            font-size: 11px;
-          }
-
-          .transaction-row span {
-            color: rgba(150,180,183,.55);
-          }
-
-          .transaction-row strong {
-            color: #dce8e9;
-            text-align: right;
-          }
-
-          .danger-value {
-            color: #ff7883 !important;
-          }
-
+          /* =====================================================
+             CHALLENGE & SAFETY ACTIONS
+          ===================================================== */
           .challenge-box {
-            margin-top: 18px;
+            margin-top: 20px;
           }
 
           .challenge-status {
@@ -3503,615 +3500,297 @@ const stopLiveCall = () => {
           }
 
           .challenge-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             display: grid;
             place-items: center;
-            color: #36d2d5;
-            border: 1px solid rgba(50,210,215,.22);
-            border-radius: 9px;
+            color: #22d3ee;
+            background: rgba(34, 211, 238, 0.1);
+            border-radius: 8px;
           }
 
           .challenge-status strong {
             display: block;
-            color: #dce8e9;
-            font-size: 12px;
+            color: #f8fafc;
+            font-size: 13px;
           }
 
           .challenge-status span {
             display: block;
             margin-top: 4px;
-            color: rgba(150,180,183,.55);
-            font-size: 10px;
+            color: #64748b;
+            font-size: 11px;
           }
 
           .challenge-prompt {
-            margin-top: 17px;
-            padding: 14px;
-            background: rgba(2,16,19,.65);
-            border: 1px solid rgba(100,180,186,.08);
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 10px;
           }
 
           .challenge-prompt span {
             display: block;
-            color: rgba(54,205,210,.55);
-            font-size: 9px;
+            color: #22d3ee;
+            font-size: 10px;
+            font-weight: 700;
             letter-spacing: .1em;
+            text-transform: uppercase;
           }
 
           .challenge-prompt strong {
             display: block;
             margin-top: 8px;
-            color: #dbe7e8;
-            font-size: 12px;
+            color: #f8fafc;
+            font-size: 13px;
           }
 
-          .challenge-actions {
+          .challenge-actions, .safety-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 14px;
+            gap: 12px;
+            margin-top: 16px;
           }
 
-          .verify-btn,
-          .secondary-btn {
+          .verify-btn, .secondary-btn, .verify-button, .block-button {
             border-radius: 8px;
-            padding: 9px 13px;
+            padding: 10px 16px;
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
             cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            border: 0;
+            transition: 0.2s;
           }
 
-          .verify-btn {
-            background: #1dc2c4;
-            border: 0;
-            color: #041013;
+          .verify-btn, .verify-button {
+            background: #22d3ee;
+            color: #020617;
           }
+          .verify-btn:hover, .verify-button:hover { background: #06b6d4; }
 
           .secondary-btn {
             background: transparent;
-            color: #9bb1b3;
-            border: 1px solid rgba(120,170,175,.18);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
           }
+          .secondary-btn:hover { color: #f8fafc; border-color: rgba(255, 255, 255, 0.2); }
 
-          .audit-list {
-            margin-top: 18px;
+          .block-button {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
           }
-
-          .audit-item {
-            display: flex;
-            gap: 12px;
-            padding: 11px 0;
-            border-bottom: 1px solid rgba(255,255,255,.035);
-          }
-
-          .audit-time {
-            color: #39cbd0;
-            font-size: 10px;
-            min-width: 45px;
-          }
-
-          .audit-text {
-            color: rgba(180,205,206,.66);
-            font-size: 11px;
-          }
+          .block-button:hover { background: rgba(239, 68, 68, 0.2); }
 
           .safety-gate {
             margin-top: 24px;
-            padding: 18px 20px;
+            padding: 20px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            border-radius: 15px;
-            background: rgba(7,25,29,.72);
-            border: 1px solid rgba(70,180,185,.12);
+            gap: 16px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(34, 211, 238, 0.2);
           }
 
-          .safety-icon {
-            color: #39d1d4;
-          }
+          .safety-icon { color: #22d3ee; }
 
-          .safety-copy {
-            flex: 1;
-          }
+          .safety-copy { flex: 1; }
 
           .safety-copy strong {
             display: block;
-            color: #dce8e9;
-            font-size: 11px;
-            letter-spacing: .08em;
+            color: #f8fafc;
+            font-size: 13px;
           }
 
           .safety-copy span {
             display: block;
             margin-top: 4px;
-            color: rgba(150,180,183,.52);
-            font-size: 10px;
+            color: #94a3b8;
+            font-size: 11px;
           }
 
-          .safety-actions {
+          /* =========================================================
+             LIVE RISK ALERT (NOTIFICATION POPUP) — GLASSMORPHISM
+          ========================================================= */
+
+          .live-alert-notification {
+            position: fixed;
+            top: 76px;
+            right: 26px;
+            z-index: 99999;
+            width: 390px;
+            min-height: 86px;
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #f59e0b; /* Default Amber */
+            border-radius: 12px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            overflow: hidden;
+            animation: liveAlertEnter 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+            color: #f8fafc;
           }
 
-          .verify-button,
-          .block-button {
-            border: 0;
+          .live-alert-notification::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+            pointer-events: none;
+          }
+
+          .live-alert-notification::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            right: -40px;
+            top: -40px;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.1); /* Ambient glow */
+            filter: blur(40px);
+            pointer-events: none;
+          }
+
+          .live-alert-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+          }
+
+          .live-alert-icon::after {
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            right: 6px;
+            top: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+          }
+
+          .live-alert-content {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .live-alert-content strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 13px;
+            font-weight: 700;
+          }
+
+          .live-alert-content span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+
+          .live-alert-content small {
+            display: block;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+          }
+
+          .live-alert-notification > button {
+            position: relative;
+            z-index: 2;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #64748b;
             border-radius: 8px;
-            padding: 9px 14px;
             cursor: pointer;
+            transition: 0.2s ease;
           }
 
-          .verify-button {
-            background: #1dc2c4;
-            color: #041013;
+          .live-alert-notification > button:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.1);
           }
 
-          .block-button {
-            background: rgba(255,70,85,.12);
-            color: #ff7b87;
-            border: 1px solid rgba(255,80,95,.2);
+          /* ALERT VARIANTS */
+          .live-alert-notification.medium { border-left-color: #f59e0b; }
+          .live-alert-notification.medium::after { background: rgba(245, 158, 11, 0.1); }
+          .live-alert-notification.medium .live-alert-icon {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
           }
 
+          .live-alert-notification.high { border-left-color: #f97316; }
+          .live-alert-notification.high::after { background: rgba(249, 115, 22, 0.1); }
+          .live-alert-notification.high .live-alert-icon {
+            color: #f97316;
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.2);
+          }
+
+          .live-alert-notification.critical {
+            border-left-color: #ef4444;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6), 0 0 30px rgba(239, 68, 68, 0.1);
+          }
+          .live-alert-notification.critical::after { background: rgba(239, 68, 68, 0.15); }
+          .live-alert-notification.critical .live-alert-icon {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 20px rgba(239,68,68,.1);
+          }
+
+          @keyframes liveAlertEnter {
+            from { opacity: 0; transform: translate3d(24px, -10px, 0) scale(.96); filter: blur(2px); }
+            to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+          }
+
+          /* =====================================================
+             MOBILE RESPONSIVE
+          ===================================================== */
           @media (max-width: 850px) {
+            .risk-grid, .main-grid { grid-template-columns: 1fr; }
+            .incident-header { grid-template-columns: 1fr; }
+            .risk-score { min-height: 100px; }
+            .safety-gate { flex-direction: column; align-items: flex-start; }
+          }
 
-            .risk-grid,
-            .main-grid {
-              grid-template-columns: 1fr;
+          @media (max-width: 600px) {
+            .live-alert-notification {
+              top: 68px; right: 12px; left: 12px; width: auto; min-height: 80px; padding: 12px;
             }
-
-            .incident-header {
-              grid-template-columns: 1fr;
-            }
-
-            .risk-score {
-              min-height: 100px;
-            }
-
-            .safety-gate {
-              flex-direction: column;
-              align-items: flex-start;
-            }
-
-           /* =========================================================
-   LIVE RISK ALERT — GLASSMORPHISM
-   ========================================================= */
-
-.live-alert-notification {
-  position: fixed;
-
-  top: 76px;
-  right: 26px;
-
-  z-index: 99999;
-
-  width: 390px;
-  min-height: 86px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 14px 15px;
-
-  /* Glass surface */
-  background:
-    linear-gradient(
-      135deg,
-      rgba(15, 34, 38, 0.94),
-      rgba(5, 17, 21, 0.91)
-    );
-
-  /* Soft border */
-  border: 1px solid rgba(118, 190, 195, 0.16);
-
-  border-left: 3px solid #f59e0b;
-
-  border-radius: 15px;
-
-  /* Depth + glass glow */
-  box-shadow:
-    0 24px 65px rgba(0, 0, 0, 0.42),
-    0 8px 25px rgba(0, 0, 0, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
-
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-
-  overflow: hidden;
-
-  animation:
-    liveAlertEnter
-    0.38s
-    cubic-bezier(0.22, 1, 0.36, 1);
-
-  color: #dce9ea;
-}
-
-
-/* =========================================================
-   TOP GLASS HIGHLIGHT
-   ========================================================= */
-
-.live-alert-notification::before {
-  content: "";
-
-  position: absolute;
-
-  top: 0;
-  left: 0;
-  right: 0;
-
-  height: 1px;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255,255,255,.14),
-      transparent
-    );
-
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   SUBTLE AMBIENT GLOW
-   ========================================================= */
-
-.live-alert-notification::after {
-  content: "";
-
-  position: absolute;
-
-  width: 120px;
-  height: 120px;
-
-  right: -55px;
-  top: -60px;
-
-  border-radius: 50%;
-
-  background: rgba(245, 158, 11, 0.07);
-
-  filter: blur(35px);
-
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   ICON
-   ========================================================= */
-
-.live-alert-icon {
-  position: relative;
-
-  width: 40px;
-  height: 40px;
-
-  flex: 0 0 40px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 11px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(245, 158, 11, 0.14),
-      rgba(245, 158, 11, 0.055)
-    );
-
-  border: 1px solid rgba(245, 158, 11, 0.16);
-
-  color: #fbbf24;
-
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.035),
-    0 0 18px rgba(245,158,11,.05);
-}
-
-
-/* small status dot */
-
-.live-alert-icon::after {
-  content: "";
-
-  position: absolute;
-
-  width: 5px;
-  height: 5px;
-
-  right: 6px;
-  top: 6px;
-
-  border-radius: 50%;
-
-  background: currentColor;
-
-  box-shadow:
-    0 0 8px currentColor;
-
-  opacity: .85;
-}
-
-
-/* =========================================================
-   CONTENT
-   ========================================================= */
-
-.live-alert-content {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 4px;
-}
-
-
-.live-alert-content strong {
-  display: block;
-
-  color: #e5eeee;
-
-  font-size: 11px;
-
-  font-weight: 700;
-
-  letter-spacing: .075em;
-
-  line-height: 1.25;
-}
-
-
-.live-alert-content span {
-  display: block;
-
-  color: rgba(194, 216, 218, .76);
-
-  font-size: 11px;
-
-  font-weight: 400;
-
-  line-height: 1.4;
-}
-
-
-.live-alert-content small {
-  display: block;
-
-  margin-top: 1px;
-
-  color: rgba(132, 166, 168, .58);
-
-  font-size: 9px;
-
-  font-weight: 600;
-
-  letter-spacing: .035em;
-
-  line-height: 1.3;
-}
-
-
-/* =========================================================
-   CLOSE BUTTON
-   ========================================================= */
-
-.live-alert-notification > button {
-  position: relative;
-
-  z-index: 2;
-
-  width: 28px;
-  height: 28px;
-
-  flex: 0 0 28px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 1px solid rgba(115, 163, 166, .08);
-
-  border-radius: 8px;
-
-  background: rgba(100, 150, 153, .045);
-
-  color: rgba(155, 181, 183, .55);
-
-  font-size: 17px;
-
-  line-height: 1;
-
-  cursor: pointer;
-
-  transition:
-    background .18s ease,
-    color .18s ease,
-    border-color .18s ease,
-    transform .18s ease;
-}
-
-
-.live-alert-notification > button:hover {
-  color: #dcebec;
-
-  background: rgba(100, 170, 175, .10);
-
-  border-color: rgba(100, 190, 195, .15);
-
-  transform: scale(1.04);
-}
-
-
-/* =========================================================
-   MEDIUM RISK
-   ========================================================= */
-
-.live-alert-notification.medium {
-  border-left-color: #eab308;
-}
-
-.live-alert-notification.medium::after {
-  background: rgba(234, 179, 8, .07);
-}
-
-.live-alert-notification.medium .live-alert-icon {
-  color: #facc15;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(234, 179, 8, .14),
-      rgba(234, 179, 8, .045)
-    );
-
-  border-color: rgba(234, 179, 8, .15);
-}
-
-
-/* =========================================================
-   HIGH RISK
-   ========================================================= */
-
-.live-alert-notification.high {
-  border-left-color: #f97316;
-}
-
-.live-alert-notification.high::after {
-  background: rgba(249, 115, 22, .075);
-}
-
-.live-alert-notification.high .live-alert-icon {
-  color: #fb923c;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(249, 115, 22, .15),
-      rgba(249, 115, 22, .045)
-    );
-
-  border-color: rgba(249, 115, 22, .16);
-}
-
-
-/* =========================================================
-   CRITICAL RISK
-   ========================================================= */
-
-.live-alert-notification.critical {
-  border-left-color: #ef4444;
-
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, .48),
-    0 8px 28px rgba(0, 0, 0, .22),
-    0 0 28px rgba(239, 68, 68, .075),
-    inset 0 1px 0 rgba(255,255,255,.035);
-}
-
-.live-alert-notification.critical::after {
-  background: rgba(239, 68, 68, .09);
-}
-
-.live-alert-notification.critical .live-alert-icon {
-  color: #f87171;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(239, 68, 68, .16),
-      rgba(239, 68, 68, .045)
-    );
-
-  border-color: rgba(239, 68, 68, .17);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.035),
-    0 0 20px rgba(239,68,68,.07);
-}
-
-
-/* =========================================================
-   ENTRY ANIMATION
-   ========================================================= */
-
-@keyframes liveAlertEnter {
-
-  from {
-    opacity: 0;
-
-    transform:
-      translate3d(24px, -10px, 0)
-      scale(.965);
-
-    filter: blur(2px);
-  }
-
-  to {
-    opacity: 1;
-
-    transform:
-      translate3d(0, 0, 0)
-      scale(1);
-
-    filter: blur(0);
-  }
-
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .live-alert-notification {
-    top: 68px;
-    right: 12px;
-    left: 12px;
-
-    width: auto;
-
-    min-height: 80px;
-
-    padding: 12px;
-  }
-
-  .live-alert-icon {
-    width: 36px;
-    height: 36px;
-
-    flex-basis: 36px;
-  }
-
-  .live-alert-content strong {
-    font-size: 10px;
-  }
-
-  .live-alert-content span {
-    font-size: 10px;
-  }
-
-  .live-alert-content small {
-    font-size: 8px;
-  }
-
-}
-
+            .live-alert-icon { width: 36px; height: 36px; flex-basis: 36px; }
+            .live-alert-content strong { font-size: 11px; }
+            .live-alert-content span { font-size: 11px; }
           }
 
         `}</style>
