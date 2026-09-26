@@ -1859,7 +1859,9 @@ async def live_call(websocket: WebSocket):
         while True:
 
             message = await websocket.receive()
-
+            if message.get("type") == "websocket.disconnect":
+                print("[LIVE] Client disconnected")
+                break
             # =================================================
             # TEXT / CONTROL / TRANSCRIPT
             # =================================================
