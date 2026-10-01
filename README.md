@@ -1,8 +1,8 @@
-# VoxShield
+# VoxTrace
 
 ## AI-Powered Real-Time Detection and Prevention of Voice Cloning Impersonation Attacks
 
-VoxShield is a real-time voice security system designed to detect AI-generated or cloned voices during live calls and audio analysis.
+VoxTrace is a real-time voice security system designed to detect AI-generated or cloned voices during live calls and audio analysis.
 
 It combines:
 
